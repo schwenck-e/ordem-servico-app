@@ -1,0 +1,13 @@
+{
+  "name": "ordem-servico-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "server"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=server",
+    "build:server": "npm run build --workspace=server"
+  },
+  "devDependencies": {}
+}
