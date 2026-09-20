@@ -3,7 +3,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 
 export default fp(async (app) => {
-  await app.register(swagger, {
+  app.register(swagger, {
     openapi: {
       info: {
         title: 'API Ordem de Serviço',
@@ -25,7 +25,7 @@ export default fp(async (app) => {
     }
   });
 
-  await app.register(swaggerUi, {
+  app.register(swaggerUi, {
     routePrefix: '/docs',
     uiConfig: {
       docExpansion: 'list',
