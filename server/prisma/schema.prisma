@@ -13,3 +13,93 @@ model AppHealth {
   checkedAt DateTime @default(now())
   status    String   @default("UP")
 }
+
+model Customer {
+  id         String      @id @default(uuid())
+  name       String
+  document   String      @unique
+  email      String
+  phone      String
+  address    String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  workOrders WorkOrder[]
+
+  @@map("customers")
+}
+
+model Technician {
+  id         String      @id @default(uuid())
+  name       String
+  email      String      @unique
+  phone      String
+  specialty  String
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  workOrders WorkOrder[]
+
+  @@map("technicians")
+}
+
+model WorkOrder {
+  id                 String    @id @default(uuid())
+  orderNumber        String    @unique
+  customerId         String
+  technicianId       String?
+  equipment          String
+  serialNumber       String?
+  reportedDefect     String
+  technicalDiagnosis String?
+  status             String    @default("OPEN")
+  priority           String    @default("MEDIUM")
+  totalServices      Float     @default(0.0)
+  totalParts         Float     @default(0.0)
+  discount           Float     @default(0.0)
+  totalAmount        Float     @default(0.0)
+  scheduledDate      DateTime?
+  completedDate      DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  technician Technician?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  items      WorkOrderItem[]
+  logs       WorkOrderLog[]
+
+  @@index([customerId])
+  @@index([technicianId])
+  @@index([status])
+  @@index([priority])
+  @@map("work_orders")
+}
+
+model WorkOrderItem {
+  id          String @id @default(uuid())
+  workOrderId String
+  type        String // "SERVICE" | "PART"
+  description String
+  quantity    Int    @default(1)
+  unitPrice   Float  @default(0.0)
+  subtotal    Float  @default(0.0)
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId])
+  @@map("work_order_items")
+}
+
+model WorkOrderLog {
+  id             String   @id @default(uuid())
+  workOrderId    String
+  previousStatus String?
+  newStatus      String
+  comment        String?
+  createdBy      String   @default("SYSTEM")
+  createdAt      DateTime @default(now())
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId])
+  @@map("work_order_logs")
+}
