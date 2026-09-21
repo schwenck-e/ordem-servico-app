@@ -3,12 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "server"
+    "server",
+    "client"
   ],
   "scripts": {
-    "dev:server": "npm run dev --workspace=server",
-    "build:server": "npm run build --workspace=server",
-    "seed:server": "npm run seed --workspace=server"
+    "dev:server": "bun run --cwd server dev",
+    "build:server": "bun run --cwd server build",
+    "seed:server": "bun run --cwd server seed",
+    "typecheck:server": "bun run --cwd server typecheck",
+    "dev:client": "bun run --cwd client dev",
+    "build:client": "bun run --cwd client build",
+    "typecheck:client": "bun run --cwd client typecheck",
+    "typecheck": "bun run typecheck:server && bun run typecheck:client",
+    "build": "bun run build:server && bun run build:client"
   },
   "devDependencies": {}
 }
