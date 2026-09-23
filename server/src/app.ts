@@ -4,6 +4,7 @@ import corsPlugin from './plugins/cors';
 import swaggerPlugin from './plugins/swagger';
 import prismaPlugin from './plugins/prisma';
 import { healthRoutes } from './modules/health/health.routes';
+import { customerRoutes } from './modules/customers/customer.routes';
 import { env } from './config/env';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -19,28 +20,25 @@ export async function buildApp(): Promise<FastifyInstance> {
     } : true
   });
 
-  // Registro de Plugins Principais
-  await app.register(corsPlugin);
-  await app.register(swaggerPlugin);
-  await app.register(prismaPlugin);
-
-  // Registro de Rotas
-  await app.register(healthRoutes, { prefix: '/health' });
-
-  // Tratamento Global de Erros
+  // Tratamento Global de Erros — MUST be set before registering routes
   app.setErrorHandler((error, request, reply) => {
-    app.log.error(error);
+    // Detect ZodError via instanceof, name, or duck-typing (handles multiple Zod copies)
+    const isZodError = error instanceof ZodError
+      || error.name === 'ZodError'
+      || (error as any).constructor?.name === 'ZodError'
+      || Array.isArray((error as any).issues);
 
-    if (error instanceof ZodError) {
+    if (isZodError) {
       return reply.status(400).send({
         statusCode: 400,
         error: 'Bad Request',
         message: 'Falha na validação dos dados de entrada.',
-        issues: error.format()
+        issues: (error as any).issues ?? []
       });
     }
 
-    if (error.statusCode) {
+    // Handle known HTTP errors (e.g., 404, 409)
+    if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
       return reply.status(error.statusCode).send({
         statusCode: error.statusCode,
         error: error.name || 'Error',
@@ -48,12 +46,22 @@ export async function buildApp(): Promise<FastifyInstance> {
       });
     }
 
+    app.log.error(error);
     return reply.status(500).send({
       statusCode: 500,
       error: 'Internal Server Error',
       message: 'Ocorreu um erro interno inesperado no servidor.'
     });
   });
+
+  // Registro de Plugins Principais
+  await app.register(corsPlugin);
+  await app.register(swaggerPlugin);
+  await app.register(prismaPlugin);
+
+  // Registro de Rotas
+  await app.register(healthRoutes, { prefix: '/health' });
+  await app.register(customerRoutes, { prefix: '/customers' });
 
   return app;
 }
