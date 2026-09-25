@@ -5,6 +5,7 @@ import swaggerPlugin from './plugins/swagger';
 import prismaPlugin from './plugins/prisma';
 import { healthRoutes } from './modules/health/health.routes';
 import { customerRoutes } from './modules/customers/customer.routes';
+import { technicianRoutes } from './modules/technicians/technician.routes';
 import { env } from './config/env';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -62,6 +63,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Registro de Rotas
   await app.register(healthRoutes, { prefix: '/health' });
   await app.register(customerRoutes, { prefix: '/customers' });
+  await app.register(technicianRoutes, { prefix: '/technicians' });
 
   return app;
 }
