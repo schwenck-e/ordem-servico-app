@@ -1,17 +1,28 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { Server } from 'lucide-react';
 import { useHealth } from '@/hooks/useHealth';
 
+const routeTitles: Record<string, string> = {
+  '/': 'Visão Geral',
+  '/work-orders': 'Ordens de Serviço',
+  '/customers': 'Clientes',
+  '/technicians': 'Técnicos',
+};
+
 export const Header: React.FC = () => {
+  const location = useLocation();
   const { data: health, isLoading, isError } = useHealth();
+
+  const currentTitle = routeTitles[location.pathname] || 'Sistema';
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
-      {/* Title / Breadcrumb Placeholder */}
+      {/* Title / Breadcrumb */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-slate-500">Sistema</span>
         <span className="text-slate-300">/</span>
-        <span className="text-sm font-semibold text-slate-800">Visão Geral</span>
+        <span className="text-sm font-semibold text-slate-800">{currentTitle}</span>
       </div>
 
       {/* Actions & Status */}

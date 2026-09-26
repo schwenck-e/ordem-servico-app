@@ -2,9 +2,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
 
 export class ApiError extends Error {
   status: number;
-  data: unknown;
+  data: any;
 
-  constructor(message: string, status: number, data?: unknown) {
+  constructor(message: string, status: number, data?: any) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -12,12 +12,13 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions extends RequestInit {
+interface RequestOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown;
   params?: Record<string, string | number | boolean | undefined>;
 }
 
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { params, headers, ...customConfig } = options;
+  const { params, headers, body, ...customConfig } = options;
 
   let url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
@@ -34,19 +35,27 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     }
   }
 
+  const isJsonBody =
+    body !== undefined &&
+    body !== null &&
+    typeof body === 'object' &&
+    !(body instanceof FormData) &&
+    !(body instanceof Blob);
+
   const config: RequestInit = {
     method: customConfig.method || 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },
+    body: isJsonBody ? JSON.stringify(body) : (body as BodyInit | undefined),
     ...customConfig,
   };
 
   const response = await fetch(url, config);
 
   if (!response.ok) {
-    let errorPayload: unknown;
+    let errorPayload: any;
     try {
       errorPayload = await response.json();
     } catch {
@@ -54,7 +63,7 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     }
     const message =
       typeof errorPayload === 'object' && errorPayload !== null && 'message' in errorPayload
-        ? String((errorPayload as { message: unknown }).message)
+        ? String(errorPayload.message)
         : `Erro na requisição: ${response.status} ${response.statusText}`;
 
     throw new ApiError(message, response.status, errorPayload);
