@@ -106,3 +106,12 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 >    - `tool_name`: "Aprovação para Início da Fase N+1: <Nome da Fase>"
 >    - `input`: {"phase": "N+1", "summary": "Fase N concluída com sucesso.", "next_scope": "Escopo da Fase N+1"}
 > 4. **Bloqueio Nativo**: Aguarde a decisão de aprovação do usuário pelo botão **Aprovar** na interface gráfica (aba Timeline & Aprovações). Ao ser aprovado, inicie a Fase N+1 automaticamente.
+> 5. **CRÍTICO: TIMEOUT OU ERRO NO MCP NÃO É APROVAÇÃO (FLUXO OPÇÃO 1)**:
+>    - O usuário tem uma janela de 180 segundos (3 minutos) para clicar nos botões na Web UI.
+>    - Se a ferramenta MCP retornar timeout (`context deadline exceeded`, `timed out after 3m0s`), erro (`TOOL_ERROR`) ou negação (`behavior: "deny"`):
+>      - Você está **TERMINANTEMENTE PROIBIDO** de iniciar a fase seguinte, commitar código ou prosseguir de forma autônoma.
+>      - **PARE IMEDIATAMENTE** todas as chamadas de ferramentas e encerre o turno.
+>      - Informe o usuário no chat:
+>        > ⏳ **Janela de aprovação interativa da UI expirou (3 minutos)**.
+>        > Revise com calma o progresso da fase anterior. Quando estiver pronto para prosseguir, basta me responder aqui no chat com **"aprovado"** / **"prossiga"** (para iniciar a próxima fase diretamente) ou **"reenviar botões"** (para abrir uma nova janela de aprovação na UI).
+>      - Aguarde a instrução e autorização explícita do usuário antes de qualquer ação subsequente.

@@ -17,8 +17,9 @@ You are tasked with creating git commits for the changes made during this sessio
 2. **Plan your commit(s):**
    - Identify which files belong together
    - Draft clear, descriptive commit messages
-   - Use imperative mood in commit messages
+   - Use imperative mood in commit messages (e.g. "Add feature", "Fix bug", not "Added feature")
    - Focus on why the changes were made, not just what
+   - Group related changes logically into atomic commits
 
 3. **Present your plan to the user:**
    - List the files you plan to add for each commit
@@ -27,6 +28,8 @@ You are tasked with creating git commits for the changes made during this sessio
 
 4. **Execute upon confirmation:**
    - Use `git add` with specific files (never use `-A` or `.`)
+   - **NEVER commit the `thoughts/` directory or anything inside it!**
+   - Run `git reset thoughts/` if staged to ensure no thoughts files are committed
    - Create commits with your planned messages
    - Show the result with `git log --oneline -n [number]`
 
@@ -36,6 +39,17 @@ You are tasked with creating git commits for the changes made during this sessio
 - Do not include any "Generated with Claude" messages
 - Do not add "Co-Authored-By" lines
 - Write commit messages as if the user wrote them
+- Never commit notes, temporary plan files, or anything in `thoughts/`
+- **CRITICAL: TIMEOUT OU ERRO NO MCP NÃO É APROVAÇÃO (FLUXO OPÇÃO 1)!**
+  - O usuário tem uma janela de 180 segundos (3 minutos) para clicar nos botões **[ Approve ]** / **[ Deny ]** na Web UI (`http://localhost:1420/`).
+  - Se você solicitar aprovação de commit via ferramenta MCP (`codelayer request_approval` ou `request_permission`) e a chamada retornar timeout (`context deadline exceeded`, `timed out after 3m0s`), erro (`TOOL_ERROR`) ou negação (`behavior: "deny"`):
+    - Você está **TERMINANTEMENTE PROIBIDO** de realizar o commit ou abrir o PR por conta própria!
+    - **NUNCA** assuma aprovação tácita dizendo "como deu timeout, vou commitar direto".
+    - **PARE IMEDIATAMENTE** todas as chamadas de ferramentas e encerre o turno.
+    - Notifique o usuário no chat:
+      > ⏳ **Janela de aprovação interativa da UI expirou (3 minutos)**.
+      > Revise com calma o diff e as alterações planejadas para o commit. Quando estiver pronto para prosseguir, basta me responder aqui no chat com **"aprovado"** / **"prossiga"** (para executar o commit diretamente) ou **"reenviar botões"** (para abrir uma nova janela de aprovação na UI).
+    - Aguarde a confirmação explícita do usuário antes de prosseguir.
 
 ## Remember:
 - You have the full context of what was done in this session
