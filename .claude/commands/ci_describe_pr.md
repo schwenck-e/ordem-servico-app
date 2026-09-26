@@ -13,6 +13,7 @@ You are tasked with generating a comprehensive pull request description followin
    - If it doesn't exist, inform the user that their `humanlayer thoughts` setup is incomplete and they need to create a PR description template at `thoughts/shared/pr_description.md`
    - Read the template carefully to understand all sections and requirements
 
+
 2. **Identify the PR to describe:**
    - Check if the current branch has an associated PR: `gh pr view --json url,number,title,state 2>/dev/null`
    - If no PR exists for the current branch, or if on main/master, list open PRs: `gh pr list --limit 10 --json number,title,headRefName,author`
@@ -54,6 +55,9 @@ You are tasked with generating a comprehensive pull request description followin
      - Include technical details in appropriate sections
      - Write a concise changelog entry
    - Ensure all checklist items are addressed (checked or explained)
+   - **CRITICAL FOR LINEAR AUTOMATION**: Always include the closing keyword at the very end of the PR description:
+     `Fixes <TICKET>` or `Closes <TICKET>` (e.g. `Fixes ELI-11` or `Closes ENG-11`).
+     This keyword is required by the GitHub ↔ Linear integration to automatically transition the ticket to **Done** when the PR is merged into `main`.
 
 8. **Save and sync the description:**
    - Write the completed description to `thoughts/shared/prs/{number}_description.md`
@@ -64,6 +68,38 @@ You are tasked with generating a comprehensive pull request description followin
    - Update the PR description directly: `gh pr edit {number} --body-file thoughts/shared/prs/{number}_description.md`
    - Confirm the update was successful
    - If any verification steps remain unchecked, remind the user to complete them before merging
+
+10. **Update Linear Ticket:**
+   - Link the PR, notify, and transition the Linear issue:
+     - Determine the Linear ticket identifier (e.g. from the branch name or plan file, like `ENG-12` or `ELI-12`).
+     - Post a high-value, structured comment to Linear following HumanLayer conventions (`linear.md`):
+       - **Focus on insights over summaries**: What is the critical understanding, architecture decision, or tradeoff?
+       - **Files updated**: Primary files touched.
+       - Use `./hack/linear_comment.sh <TICKET> <PR_URL> [COMMENT_BODY_OR_FILE] [TARGET_STATUS]`
+       - You can directly pass the generated PR description file `thoughts/shared/prs/{number}_description.md` as the comment body argument, which the script will automatically parse into structured sections (Problem Solved, Implementation & Key Decisions, User-Facing Changes):
+         ```bash
+         PR_URL=$(gh pr view --json url -q .url)
+         ./hack/linear_comment.sh <TICKET> "$PR_URL" "thoughts/shared/prs/{number}_description.md" "In Review"
+         ```
+       - Or pass a custom structured comment adhering to the ~10-line guideline:
+         ```bash
+         PR_URL=$(gh pr view --json url -q .url)
+         ./hack/linear_comment.sh <TICKET> "$PR_URL" "$(cat << 'EOF'
+         🚀 **Pull Request Aberto para Revisão**: <PR_URL>
+
+         **Summary**: ...
+         **Key Insights & Decisions**: ...
+         **Files Updated**:
+         - `path/to/file`
+         EOF
+         )" "In Review"
+         ```
+     - The script will automatically attach the PR to the issue, add the comment, and move the status to "In Review".
+     - Confirm that the comment and PR link were posted successfully.
+     - **Post-Merge**: When the PR is merged into `main`, ensure the ticket is transitioned to **Done**:
+       ```bash
+       ./hack/linear_status.sh <TICKET> Done
+       ```
 
 ## Important notes:
 - This command works across different repositories - always read the local template
