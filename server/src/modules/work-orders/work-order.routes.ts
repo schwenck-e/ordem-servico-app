@@ -2,12 +2,15 @@ import { FastifyPluginAsync } from 'fastify';
 import {
   createWorkOrderSchema,
   updateWorkOrderSchema,
+  updateWorkOrderStatusSchema,
   workOrderIdParamSchema,
   listWorkOrdersQuerySchema,
   createWorkOrderSwaggerSchema,
   listWorkOrdersSwaggerSchema,
   getWorkOrderSwaggerSchema,
   updateWorkOrderSwaggerSchema,
+  updateWorkOrderStatusSwaggerSchema,
+  getWorkOrderTimelineSwaggerSchema,
 } from './work-order.schemas';
 import * as workOrderService from './work-order.service';
 
@@ -48,4 +51,24 @@ export const workOrderRoutes: FastifyPluginAsync = async (app) => {
     const workOrder = await workOrderService.updateWorkOrder(app.prisma, id, data);
     return reply.status(200).send(workOrder);
   });
+
+  // PATCH /:id/status — Alterar status da Ordem de Serviço com validação de fluxo e auditoria
+  app.patch('/:id/status', {
+    schema: updateWorkOrderStatusSwaggerSchema,
+  }, async (request, reply) => {
+    const { id } = workOrderIdParamSchema.parse(request.params);
+    const data = updateWorkOrderStatusSchema.parse(request.body);
+    const workOrder = await workOrderService.updateWorkOrderStatus(app.prisma, id, data);
+    return reply.status(200).send(workOrder);
+  });
+
+  // GET /:id/timeline — Consultar linha do tempo / histórico de auditoria da Ordem de Serviço
+  app.get('/:id/timeline', {
+    schema: getWorkOrderTimelineSwaggerSchema,
+  }, async (request, reply) => {
+    const { id } = workOrderIdParamSchema.parse(request.params);
+    const timeline = await workOrderService.getWorkOrderTimeline(app.prisma, id);
+    return reply.status(200).send(timeline);
+  });
 };
+

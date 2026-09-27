@@ -800,3 +800,743 @@ describe('PUT /work-orders/:id', () => {
     expect(body.issues[0].message).toContain('Ao menos um campo deve ser informado');
   });
 });
+
+// ─── PATCH /work-orders/:id/status ──────────────────────────────────────────
+
+describe('PATCH /work-orders/:id/status', () => {
+  it('deve transicionar de OPEN para IN_PROGRESS com técnico pré-vinculado (200)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Notebook Dell XPS 13',
+        reportedDefect: 'Superaquecimento constante.',
+        items: [{ type: 'SERVICE', description: 'Limpeza e troca de pasta térmica', quantity: 1, unitPrice: 150 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        comment: 'Técnico iniciou a desmontagem do equipamento.',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.status).toBe('IN_PROGRESS');
+    expect(body.technicianId).toBe(technician.id);
+
+    // Verificar log de auditoria
+    const logs = body.logs;
+    expect(logs).toHaveLength(2);
+    expect(logs[1].previousStatus).toBe('OPEN');
+    expect(logs[1].newStatus).toBe('IN_PROGRESS');
+    expect(logs[1].comment).toBe('Técnico iniciou a desmontagem do equipamento.');
+    expect(logs[1].createdBy).toBe(technician.name);
+  });
+
+  it('deve transicionar de OPEN para IN_PROGRESS atribuindo técnico ativo no payload (200)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Impressora Epson L3150',
+        reportedDefect: 'Não puxa papel.',
+        items: [{ type: 'SERVICE', description: 'Troca de rolete', quantity: 1, unitPrice: 80 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        technicianId: technician.id,
+        createdBy: 'Gerente Operacional',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.status).toBe('IN_PROGRESS');
+    expect(body.technicianId).toBe(technician.id);
+
+    const logs = body.logs;
+    expect(logs[1].createdBy).toBe('Gerente Operacional');
+  });
+
+  it('deve retornar 400 ao tentar mudar para IN_PROGRESS sem técnico atribuído na OS e sem payload', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Monitor LG Ultrawide',
+        reportedDefect: 'Linhas verticais na tela.',
+        items: [{ type: 'SERVICE', description: 'Diagnóstico', quantity: 1, unitPrice: 100 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('É obrigatório atribuir um técnico responsável para iniciar o atendimento');
+  });
+
+  it('deve retornar 400 ao tentar mudar para IN_PROGRESS informando técnico inativo', async () => {
+    const customer = await createCustomerHelper();
+    const inactiveTechnician = await createTechnicianHelper({
+      email: 'inativo@empresa.com.br',
+      isActive: false,
+    });
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'MacBook Pro 14',
+        reportedDefect: 'Bateria não carrega.',
+        items: [{ type: 'SERVICE', description: 'Troca de bateria', quantity: 1, unitPrice: 400 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        technicianId: inactiveTechnician.id,
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('O técnico selecionado está inativo');
+  });
+
+  it('deve retornar 404 ao tentar mudar para IN_PROGRESS com ID de técnico inexistente', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Desktop Gamer',
+        reportedDefect: 'Reiniciando em jogos.',
+        items: [{ type: 'SERVICE', description: 'Diagnóstico', quantity: 1, unitPrice: 120 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        technicianId: '00000000-0000-0000-0000-000000000000',
+      },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json().message).toContain('Técnico não encontrado');
+  });
+
+  it('deve transicionar entre estados operacionais: IN_PROGRESS -> WAITING_PARTS e WAITING_APPROVAL e retorno (200)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Placa de Vídeo RTX 3080',
+        reportedDefect: 'Artefatos na tela.',
+        items: [{ type: 'SERVICE', description: 'Reballing de VRAM', quantity: 1, unitPrice: 500 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    // 1. OPEN -> IN_PROGRESS
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: { status: 'IN_PROGRESS' },
+    });
+
+    // 2. IN_PROGRESS -> WAITING_PARTS (com justificativa)
+    const resWaitingParts = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'WAITING_PARTS',
+        comment: 'Aguardando chegada dos chips de memória Samsung.',
+      },
+    });
+    expect(resWaitingParts.statusCode).toBe(200);
+    expect(resWaitingParts.json().status).toBe('WAITING_PARTS');
+
+    // 3. WAITING_PARTS -> IN_PROGRESS
+    const resResumeParts = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        comment: 'Peças chegaram, retomando reparo.',
+      },
+    });
+    expect(resResumeParts.statusCode).toBe(200);
+    expect(resResumeParts.json().status).toBe('IN_PROGRESS');
+
+    // 4. IN_PROGRESS -> WAITING_APPROVAL
+    const resWaitingApproval = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'WAITING_APPROVAL',
+        comment: 'Orçamento enviado para aprovação do cliente via WhatsApp.',
+      },
+    });
+    expect(resWaitingApproval.statusCode).toBe(200);
+    expect(resWaitingApproval.json().status).toBe('WAITING_APPROVAL');
+
+    // 5. WAITING_APPROVAL -> IN_PROGRESS
+    const resResumeApproval = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        comment: 'Cliente aprovou o orçamento adicional.',
+      },
+    });
+    expect(resResumeApproval.statusCode).toBe(200);
+    expect(resResumeApproval.json().status).toBe('IN_PROGRESS');
+  });
+
+  it('deve retornar 400 ao tentar transicionar para WAITING_PARTS sem justificativa', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Notebook Dell',
+        reportedDefect: 'Teclado falhando.',
+        items: [{ type: 'SERVICE', description: 'Troca de teclado', quantity: 1, unitPrice: 150 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: { status: 'IN_PROGRESS' },
+    });
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'WAITING_PARTS',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('É obrigatório informar o motivo/peças pendentes');
+  });
+
+  it('deve transicionar para COMPLETED com laudo técnico pré-existente e gravar completedDate (200)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Console PlayStation 5',
+        reportedDefect: 'Desligando sozinho após 10 minutos.',
+        items: [{ type: 'SERVICE', description: 'Troca de metal líquido', quantity: 1, unitPrice: 220 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    // Colocar em andamento e já cadastrar laudo técnico via PUT
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: { status: 'IN_PROGRESS' },
+    });
+
+    await app.inject({
+      method: 'PUT',
+      url: `/work-orders/${orderId}`,
+      payload: {
+        technicalDiagnosis: 'Metal líquido oxidado foi substituído e limpeza do dissipador efetuada com sucesso.',
+      },
+    });
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'COMPLETED',
+        comment: 'Testes de estresse executados por 2 horas sem desligamento.',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.status).toBe('COMPLETED');
+    expect(body.completedDate).toBeDefined();
+    expect(new Date(body.completedDate).getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('deve transicionar para COMPLETED fornecendo laudo técnico no payload do PATCH (200)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'iPad Air 4',
+        reportedDefect: 'Touch screen com toque fantasma.',
+        items: [{ type: 'SERVICE', description: 'Substituição de tela', quantity: 1, unitPrice: 450 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: { status: 'IN_PROGRESS' },
+    });
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'COMPLETED',
+        technicalDiagnosis: 'Tela LCD/Touch screen substituída por peça original; calibragem concluída.',
+        comment: 'Aparelho pronto para retirada.',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.status).toBe('COMPLETED');
+    expect(body.technicalDiagnosis).toContain('Tela LCD/Touch screen substituída');
+    expect(body.completedDate).toBeDefined();
+  });
+
+  it('deve retornar 400 ao tentar concluir OS sem laudo técnico (nem prévio, nem no payload)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Notebook Lenovo',
+        reportedDefect: 'Sem som.',
+        items: [{ type: 'SERVICE', description: 'Troca de alto-falantes', quantity: 1, unitPrice: 90 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: { status: 'IN_PROGRESS' },
+    });
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'COMPLETED',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('Diagnóstico técnico é obrigatório para concluir a ordem de serviço');
+  });
+
+  it('deve permitir cancelamento a partir de OPEN com justificativa obrigatória (200)', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Impressora HP',
+        reportedDefect: 'Atolamento.',
+        items: [{ type: 'SERVICE', description: 'Revisão', quantity: 1, unitPrice: 50 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'CANCELED',
+        comment: 'Cliente desistiu do orçamento e retirou o equipamento sem reparo.',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.status).toBe('CANCELED');
+  });
+
+  it('deve retornar 400 ao tentar cancelar sem justificativa (comment)', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Impressora HP',
+        reportedDefect: 'Atolamento.',
+        items: [{ type: 'SERVICE', description: 'Revisão', quantity: 1, unitPrice: 50 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'CANCELED',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('É obrigatório informar uma justificativa para o cancelamento');
+  });
+
+  it('deve retornar 400 ao tentar transicionar para o mesmo status (OPEN -> OPEN)', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Tablet Samsung',
+        reportedDefect: 'Conector quebrado.',
+        items: [{ type: 'SERVICE', description: 'Reparo conector', quantity: 1, unitPrice: 110 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    // Como o schema Zod aceita apenas os status mutáveis ('IN_PROGRESS', 'WAITING_PARTS', etc.),
+    // testamos com IN_PROGRESS -> IN_PROGRESS
+    const technician = await createTechnicianHelper();
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        technicianId: technician.id,
+      },
+    });
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('A ordem de serviço já se encontra no status IN_PROGRESS');
+  });
+
+  it('deve retornar 400 para saltos proibidos na máquina de estados (ex: OPEN -> COMPLETED)', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Tablet Samsung',
+        reportedDefect: 'Tela quebrada.',
+        items: [{ type: 'SERVICE', description: 'Troca de tela', quantity: 1, unitPrice: 200 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'COMPLETED',
+        technicalDiagnosis: 'Concluído diretamente.',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('Transição de status inválida: de OPEN para COMPLETED');
+  });
+
+  it('deve retornar 400 ao tentar alterar status de uma OS em estado terminal COMPLETED', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Smartphone Moto G',
+        reportedDefect: 'Não liga.',
+        items: [{ type: 'SERVICE', description: 'Troca de conector', quantity: 1, unitPrice: 70 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    // OPEN -> IN_PROGRESS -> COMPLETED
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: { status: 'IN_PROGRESS' },
+    });
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'COMPLETED',
+        technicalDiagnosis: 'Conector de carga ressoldado.',
+      },
+    });
+
+    // Tentativa de alterar status após concluída
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('Não é possível alterar o status de uma ordem de serviço concluída');
+  });
+
+  it('deve retornar 400 ao tentar alterar status de uma OS em estado terminal CANCELED', async () => {
+    const customer = await createCustomerHelper();
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        equipment: 'Roteador Wi-Fi',
+        reportedDefect: 'Não liga.',
+        items: [{ type: 'SERVICE', description: 'Diagnóstico', quantity: 1, unitPrice: 40 }],
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'CANCELED',
+        comment: 'Equipamento sem conserto viável.',
+      },
+    });
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('Não é possível alterar o status de uma ordem de serviço cancelada');
+  });
+
+  it('deve retornar 404 ao tentar atualizar status de OS inexistente', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/work-orders/00000000-0000-0000-0000-000000000000/status',
+      payload: {
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json().message).toContain('Ordem de serviço não encontrada');
+  });
+
+  it('deve retornar 400 se o UUID na rota de status for inválido', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/work-orders/invalido-uuid/status',
+      payload: {
+        status: 'IN_PROGRESS',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+// ─── GET /work-orders/:id/timeline ──────────────────────────────────────────
+
+describe('GET /work-orders/:id/timeline', () => {
+  it('deve retornar histórico cronológico completo de logs de auditoria (200)', async () => {
+    const customer = await createCustomerHelper();
+    const technician = await createTechnicianHelper();
+
+    // 1. Criar OS (gera log inicial OPEN)
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/work-orders',
+      payload: {
+        customerId: customer.id,
+        technicianId: technician.id,
+        equipment: 'Dell Inspiron 14',
+        reportedDefect: 'Lentidão severa ao iniciar.',
+        items: [{ type: 'SERVICE', description: 'Upgrade SSD', quantity: 1, unitPrice: 200 }],
+        initialComment: 'Aparelho recebido na bancada.',
+      },
+    });
+
+    const orderId = createRes.json().id;
+
+    // 2. Mudar para IN_PROGRESS
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'IN_PROGRESS',
+        comment: 'Iniciada clonagem do disco.',
+        createdBy: 'Carlos Supervisor',
+      },
+    });
+
+    // 3. Mudar para COMPLETED
+    await app.inject({
+      method: 'PATCH',
+      url: `/work-orders/${orderId}/status`,
+      payload: {
+        status: 'COMPLETED',
+        technicalDiagnosis: 'SSD NVMe 500GB instalado e Windows 11 clonado com sucesso.',
+        comment: 'Serviço finalizado com sucesso.',
+      },
+    });
+
+    // 4. Consultar timeline
+    const res = await app.inject({
+      method: 'GET',
+      url: `/work-orders/${orderId}/timeline`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    const logs = res.json();
+    expect(Array.isArray(logs)).toBe(true);
+    expect(logs).toHaveLength(3);
+
+    // Validar ordenação cronológica crescente
+    expect(new Date(logs[0].createdAt).getTime()).toBeLessThanOrEqual(new Date(logs[1].createdAt).getTime());
+    expect(new Date(logs[1].createdAt).getTime()).toBeLessThanOrEqual(new Date(logs[2].createdAt).getTime());
+
+    // Validar primeiro log (criação)
+    expect(logs[0].previousStatus).toBeNull();
+    expect(logs[0].newStatus).toBe('OPEN');
+    expect(logs[0].comment).toBe('Aparelho recebido na bancada.');
+
+    // Validar segundo log
+    expect(logs[1].previousStatus).toBe('OPEN');
+    expect(logs[1].newStatus).toBe('IN_PROGRESS');
+    expect(logs[1].createdBy).toBe('Carlos Supervisor');
+
+    // Validar terceiro log
+    expect(logs[2].previousStatus).toBe('IN_PROGRESS');
+    expect(logs[2].newStatus).toBe('COMPLETED');
+    expect(logs[2].comment).toBe('Serviço finalizado com sucesso.');
+  });
+
+  it('deve retornar 404 para OS inexistente na timeline', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/work-orders/00000000-0000-0000-0000-000000000000/timeline',
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json().message).toContain('Ordem de serviço não encontrada');
+  });
+
+  it('deve retornar 400 para UUID inválido na timeline', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/work-orders/uuid-invalido/timeline',
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+});
+
