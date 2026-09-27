@@ -148,6 +148,37 @@ export const updateWorkOrderSchema = z.object({
   'Ao menos um campo deve ser informado para atualização'
 );
 
+// ─── Atualização de Status da Ordem de Serviço ─────────────────────────────
+
+export const updateWorkOrderStatusSchema = z.object({
+  status: z.enum([
+    'IN_PROGRESS',
+    'WAITING_PARTS',
+    'WAITING_APPROVAL',
+    'COMPLETED',
+    'CANCELED',
+  ]),
+  comment: z
+    .string()
+    .trim()
+    .max(1000, 'Comentário deve ter no máximo 1000 caracteres')
+    .optional(),
+  technicalDiagnosis: z
+    .string()
+    .trim()
+    .max(2000, 'Diagnóstico técnico deve ter no máximo 2000 caracteres')
+    .optional(),
+  technicianId: z
+    .string()
+    .uuid('Identificador do técnico inválido (UUID v4 esperado)')
+    .optional(),
+  createdBy: z
+    .string()
+    .trim()
+    .max(150, 'Nome do autor deve ter no máximo 150 caracteres')
+    .optional(),
+});
+
 // ─── Parâmetros de Rota e Consulta ──────────────────────────────────────────
 
 export const workOrderIdParamSchema = z.object({
@@ -196,6 +227,7 @@ export const listWorkOrdersQuerySchema = z.object({
 export type CreateWorkOrderItemInput = z.infer<typeof createWorkOrderItemSchema>;
 export type CreateWorkOrderInput = z.infer<typeof createWorkOrderSchema>;
 export type UpdateWorkOrderInput = z.infer<typeof updateWorkOrderSchema>;
+export type UpdateWorkOrderStatusInput = z.infer<typeof updateWorkOrderStatusSchema>;
 export type ListWorkOrdersQuery = z.infer<typeof listWorkOrdersQuerySchema>;
 export type WorkOrderIdParam = z.infer<typeof workOrderIdParamSchema>;
 
@@ -311,3 +343,44 @@ export const updateWorkOrderSwaggerSchema = {
     },
   },
 };
+
+export const updateWorkOrderStatusSwaggerSchema = {
+  tags: ['WorkOrders'],
+  summary: 'Atualizar status da Ordem de Serviço com validação de fluxo e auditoria',
+  description: 'Altera o status da Ordem de Serviço respeitando as transições permitidas da máquina de estados, regras de negócio associadas e registro atômico no histórico de auditoria.',
+  params: {
+    type: 'object' as const,
+    required: ['id'],
+    properties: {
+      id: { type: 'string' as const, format: 'uuid' },
+    },
+  },
+  body: {
+    type: 'object' as const,
+    required: ['status'],
+    properties: {
+      status: {
+        type: 'string' as const,
+        enum: ['IN_PROGRESS', 'WAITING_PARTS', 'WAITING_APPROVAL', 'COMPLETED', 'CANCELED'],
+      },
+      comment: { type: 'string' as const },
+      technicalDiagnosis: { type: 'string' as const },
+      technicianId: { type: 'string' as const, format: 'uuid' },
+      createdBy: { type: 'string' as const },
+    },
+  },
+};
+
+export const getWorkOrderTimelineSwaggerSchema = {
+  tags: ['WorkOrders'],
+  summary: 'Consultar linha do tempo / histórico de auditoria da Ordem de Serviço',
+  description: 'Retorna o histórico cronológico completo de mudanças de status e anotações da Ordem de Serviço.',
+  params: {
+    type: 'object' as const,
+    required: ['id'],
+    properties: {
+      id: { type: 'string' as const, format: 'uuid' },
+    },
+  },
+};
+

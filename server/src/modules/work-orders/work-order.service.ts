@@ -3,6 +3,7 @@ import type {
   CreateWorkOrderInput,
   CreateWorkOrderItemInput,
   UpdateWorkOrderInput,
+  UpdateWorkOrderStatusInput,
   ListWorkOrdersQuery,
 } from './work-order.schemas';
 
@@ -411,3 +412,184 @@ export async function updateWorkOrder(
 
   return getWorkOrderById(prisma, id);
 }
+
+// ─── Máquina de Estados e Workflow de Status ────────────────────────────────
+
+export const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  OPEN: ['IN_PROGRESS', 'CANCELED'],
+  IN_PROGRESS: ['WAITING_PARTS', 'WAITING_APPROVAL', 'COMPLETED', 'CANCELED'],
+  WAITING_PARTS: ['IN_PROGRESS', 'CANCELED'],
+  WAITING_APPROVAL: ['IN_PROGRESS', 'CANCELED'],
+  COMPLETED: [],
+  CANCELED: [],
+};
+
+export async function updateWorkOrderStatus(
+  prisma: PrismaClient,
+  id: string,
+  data: UpdateWorkOrderStatusInput
+) {
+  // 1. Buscar OS existente com técnico e cliente associados
+  const current = await prisma.workOrder.findUnique({
+    where: { id },
+    include: {
+      technician: true,
+      customer: true,
+    },
+  });
+
+  if (!current) {
+    throw createHttpError(404, 'Ordem de serviço não encontrada.');
+  }
+
+  // 2. Validação: transição para o mesmo status
+  if (current.status === data.status) {
+    throw createHttpError(
+      400,
+      `A ordem de serviço já se encontra no status ${current.status}.`
+    );
+  }
+
+  // 3. Validação: estados terminais (COMPLETED e CANCELED não sofrem transição)
+  if (current.status === 'COMPLETED' || current.status === 'CANCELED') {
+    throw createHttpError(
+      400,
+      `Não é possível alterar o status de uma ordem de serviço ${
+        current.status === 'COMPLETED' ? 'concluída' : 'cancelada'
+      }.`
+    );
+  }
+
+  // 4. Validação: matriz de transições permitidas
+  const allowedTransitions = VALID_STATUS_TRANSITIONS[current.status] || [];
+  if (!allowedTransitions.includes(data.status)) {
+    throw createHttpError(
+      400,
+      `Transição de status inválida: de ${current.status} para ${data.status}.`
+    );
+  }
+
+  // 5. Validação de técnico quando informado explicitamente
+  let effectiveTechnician = current.technician;
+  if (data.technicianId) {
+    const technician = await prisma.technician.findUnique({
+      where: { id: data.technicianId },
+    });
+
+    if (!technician) {
+      throw createHttpError(404, 'Técnico não encontrado.');
+    }
+
+    if (!technician.isActive) {
+      throw createHttpError(400, 'O técnico selecionado está inativo.');
+    }
+
+    effectiveTechnician = technician;
+  }
+
+  // 6. Regra de negócio: IN_PROGRESS exige técnico responsável ativo
+  if (data.status === 'IN_PROGRESS') {
+    const targetTechnicianId = data.technicianId ?? current.technicianId;
+    if (!targetTechnicianId) {
+      throw createHttpError(
+        400,
+        'É obrigatório atribuir um técnico responsável para iniciar o atendimento da ordem de serviço.'
+      );
+    }
+
+    if (effectiveTechnician && !effectiveTechnician.isActive) {
+      throw createHttpError(
+        400,
+        'O técnico responsável atualmente atribuído está inativo.'
+      );
+    }
+  }
+
+  // 7. Regra de negócio: COMPLETED exige laudo técnico (já na OS ou enviado agora)
+  if (data.status === 'COMPLETED') {
+    const diagnosis = data.technicalDiagnosis?.trim() || current.technicalDiagnosis?.trim();
+    if (!diagnosis) {
+      throw createHttpError(
+        400,
+        'Diagnóstico técnico é obrigatório para concluir a ordem de serviço.'
+      );
+    }
+  }
+
+  // 8. Regra de negócio: CANCELED exige justificativa
+  if (data.status === 'CANCELED') {
+    if (!data.comment || data.comment.trim() === '') {
+      throw createHttpError(
+        400,
+        'É obrigatório informar uma justificativa para o cancelamento da ordem de serviço.'
+      );
+    }
+  }
+
+  // 9. Regra de negócio: WAITING_PARTS exige justificativa
+  if (data.status === 'WAITING_PARTS') {
+    if (!data.comment || data.comment.trim() === '') {
+      throw createHttpError(
+        400,
+        'É obrigatório informar o motivo/peças pendentes ao colocar a ordem de serviço em espera.'
+      );
+    }
+  }
+
+  // 10. Montagem dos dados de auditoria
+  const logComment =
+    data.comment?.trim() ||
+    `Status alterado de ${current.status} para ${data.status}.`;
+  const logCreatedBy =
+    data.createdBy?.trim() ||
+    effectiveTechnician?.name ||
+    'SYSTEM';
+
+  // 11. Execução transacional atômica
+  await prisma.$transaction(async (tx) => {
+    await tx.workOrder.update({
+      where: { id },
+      data: {
+        status: data.status,
+        ...(data.status === 'COMPLETED' ? { completedDate: new Date() } : {}),
+        ...(data.technicalDiagnosis !== undefined
+          ? { technicalDiagnosis: data.technicalDiagnosis?.trim() ?? null }
+          : {}),
+        ...(data.technicianId !== undefined
+          ? { technicianId: data.technicianId }
+          : {}),
+      },
+    });
+
+    await tx.workOrderLog.create({
+      data: {
+        workOrderId: id,
+        previousStatus: current.status,
+        newStatus: data.status,
+        comment: logComment,
+        createdBy: logCreatedBy,
+      },
+    });
+  });
+
+  return getWorkOrderById(prisma, id);
+}
+
+// ─── Linha do Tempo e Histórico de Auditoria ────────────────────────────────
+
+export async function getWorkOrderTimeline(prisma: PrismaClient, id: string) {
+  const workOrder = await prisma.workOrder.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!workOrder) {
+    throw createHttpError(404, 'Ordem de serviço não encontrada.');
+  }
+
+  return prisma.workOrderLog.findMany({
+    where: { workOrderId: id },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
