@@ -99,3 +99,85 @@ export interface HealthResponse {
     status: string;
   };
 }
+
+export interface WorkOrderSummary {
+  id: string;
+  orderNumber: string;
+  customerId: string;
+  technicianId: string | null;
+  equipment: string;
+  serialNumber: string | null;
+  reportedDefect: string;
+  technicalDiagnosis: string | null;
+  status: WorkOrderStatus;
+  priority: WorkOrderPriority;
+  totalServices: number;
+  totalParts: number;
+  discount: number;
+  totalAmount: number;
+  scheduledDate: string | null;
+  completedDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
+  technician: {
+    id: string;
+    name: string;
+    email: string;
+    specialty: string;
+  } | null;
+  _count?: {
+    items: number;
+  };
+}
+
+export interface WorkOrderItem {
+  id: string;
+  workOrderId: string;
+  type: WorkOrderItemType;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  createdAt?: string;
+}
+
+export interface WorkOrderLog {
+  id: string;
+  workOrderId: string;
+  previousStatus: WorkOrderStatus | null;
+  newStatus: WorkOrderStatus;
+  comment: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface WorkOrder extends WorkOrderSummary {
+  items?: WorkOrderItem[];
+  logs?: WorkOrderLog[];
+}
+
+export interface WorkOrderFilterParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: WorkOrderStatus | 'all';
+  priority?: WorkOrderPriority | 'all';
+  customerId?: string;
+  technicianId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface UpdateWorkOrderStatusInput {
+  status: WorkOrderStatus;
+  comment?: string;
+  technicalDiagnosis?: string;
+  technicianId?: string;
+  createdBy?: string;
+}
