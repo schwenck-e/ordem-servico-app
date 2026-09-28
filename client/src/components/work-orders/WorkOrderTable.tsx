@@ -41,13 +41,12 @@ export const WorkOrderTable: React.FC<WorkOrderTableProps> = ({
               <tr key={order.id} className="hover:bg-slate-50/80 transition-colors">
                 {/* Protocolo */}
                 <td className="px-5 py-4 whitespace-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => onView(order)}
+                  <Link
+                    to={`/work-orders/${order.id}`}
                     className="font-mono text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline inline-block"
                   >
                     {order.orderNumber}
-                  </button>
+                  </Link>
                 </td>
 
                 {/* Cliente */}

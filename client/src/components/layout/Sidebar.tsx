@@ -18,7 +18,7 @@ const navigation = [
 
 export const Sidebar: React.FC = () => {
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-screen">
+    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-screen print:hidden">
       {/* Brand / Logo */}
       <div className="h-16 flex items-center px-6 gap-3 border-b border-slate-100">
         <div className="w-9 h-9 bg-brand-600 rounded-lg flex items-center justify-center text-white shadow-sm shadow-brand-500/30">

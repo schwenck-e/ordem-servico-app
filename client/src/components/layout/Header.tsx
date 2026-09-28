@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
   const currentTitle = routeTitles[location.pathname] || 'Sistema';
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
+    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 print:hidden">
       {/* Title / Breadcrumb */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-slate-500">Sistema</span>

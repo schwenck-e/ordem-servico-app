@@ -73,8 +73,10 @@ export function useUpdateWorkOrderStatus() {
         method: 'PATCH',
         body: data,
       }),
-    onSuccess: () => {
+    onSuccess: (_updated, { id }) => {
       queryClient.invalidateQueries({ queryKey: WORK_ORDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [...WORK_ORDERS_QUERY_KEY, id] });
+      queryClient.invalidateQueries({ queryKey: [...WORK_ORDERS_QUERY_KEY, id, 'timeline'] });
     },
   });
 }
@@ -106,6 +108,7 @@ export function useUpdateWorkOrder() {
     onSuccess: (_updated, { id }) => {
       queryClient.invalidateQueries({ queryKey: WORK_ORDERS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...WORK_ORDERS_QUERY_KEY, id] });
+      queryClient.invalidateQueries({ queryKey: [...WORK_ORDERS_QUERY_KEY, id, 'timeline'] });
     },
   });
 }

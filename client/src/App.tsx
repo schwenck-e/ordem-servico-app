@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { WorkOrdersPage } from '@/pages/WorkOrdersPage';
 import { WorkOrderFormPage } from '@/pages/WorkOrderFormPage';
+import { WorkOrderDetailPage } from '@/pages/WorkOrderDetailPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { TechniciansPage } from '@/pages/TechniciansPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -18,6 +19,7 @@ export const App: React.FC = () => {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/work-orders" element={<WorkOrdersPage />} />
             <Route path="/work-orders/new" element={<WorkOrderFormPage />} />
+            <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
             <Route path="/work-orders/:id/edit" element={<WorkOrderFormPage />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/technicians" element={<TechniciansPage />} />

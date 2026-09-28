@@ -157,9 +157,11 @@ export interface WorkOrderLog {
   createdAt: string;
 }
 
-export interface WorkOrder extends WorkOrderSummary {
-  items?: WorkOrderItem[];
-  logs?: WorkOrderLog[];
+export interface WorkOrder extends Omit<WorkOrderSummary, 'customer' | 'technician' | 'items' | 'logs'> {
+  customer: Customer;
+  technician: Technician | null;
+  items: WorkOrderItem[];
+  logs: WorkOrderLog[];
 }
 
 export interface WorkOrderFilterParams {
