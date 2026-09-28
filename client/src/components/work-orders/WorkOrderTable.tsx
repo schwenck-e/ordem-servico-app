@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowRightLeft, Eye, Wrench, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRightLeft, Eye, Edit2, Wrench, Calendar } from 'lucide-react';
 import { StatusBadge, PriorityBadge } from '@/components/common/Badge';
 import { maskPhone } from '@/lib/masks';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -132,6 +133,16 @@ export const WorkOrderTable: React.FC<WorkOrderTableProps> = ({
                       <ArrowRightLeft className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Status</span>
                     </button>
+
+                    {/* Botão Editar OS */}
+                    <Link
+                      to={`/work-orders/${order.id}/edit`}
+                      title="Editar dados da OS"
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border text-slate-700 hover:text-indigo-700 border-slate-200 hover:border-indigo-200 bg-white hover:bg-indigo-50/50 transition-colors"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="hidden sm:inline">Editar</span>
+                    </Link>
 
                     {/* Botão Visualizar Detalhes */}
                     <button

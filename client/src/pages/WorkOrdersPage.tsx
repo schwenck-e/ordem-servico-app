@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ClipboardList,
   Plus,
   AlertCircle,
   RefreshCw,
-  Info,
 } from 'lucide-react';
 import { WorkOrderFilters, type ViewMode, type WorkOrderFiltersState } from '@/components/work-orders/WorkOrderFilters';
 import { WorkOrderTable } from '@/components/work-orders/WorkOrderTable';
@@ -14,7 +14,6 @@ import { WorkOrderQuickViewModal } from '@/components/work-orders/WorkOrderQuick
 import { Pagination } from '@/components/common/Pagination';
 import { TableSkeleton } from '@/components/common/TableSkeleton';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Modal } from '@/components/common/Modal';
 import { useWorkOrders } from '@/hooks/useWorkOrders';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { WorkOrderSummary } from '@/types';
@@ -31,6 +30,8 @@ const INITIAL_FILTERS: WorkOrderFiltersState = {
 };
 
 export const WorkOrdersPage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Persisted view mode (Table or Kanban)
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(STORAGE_VIEW_KEY);
@@ -73,7 +74,6 @@ export const WorkOrdersPage: React.FC = () => {
   // Modals state
   const [statusModalOrder, setStatusModalOrder] = useState<WorkOrderSummary | null>(null);
   const [quickViewOrderId, setQuickViewOrderId] = useState<string | null>(null);
-  const [isNewOrderNoticeOpen, setIsNewOrderNoticeOpen] = useState(false);
 
   // Query: load 100 items if in Kanban mode to populate columns comfortably, or 10 per page in Table mode
   const { data, isLoading, isError, error, refetch } = useWorkOrders({
@@ -119,7 +119,7 @@ export const WorkOrdersPage: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => setIsNewOrderNoticeOpen(true)}
+          onClick={() => navigate('/work-orders/new')}
           className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
@@ -195,7 +195,16 @@ export const WorkOrdersPage: React.FC = () => {
               >
                 Limpar filtros
               </button>
-            ) : undefined
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate('/work-orders/new')}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                Nova Ordem de Serviço
+              </button>
+            )
           }
         />
       ) : viewMode === 'table' ? (
@@ -240,40 +249,6 @@ export const WorkOrdersPage: React.FC = () => {
           setStatusModalOrder(order);
         }}
       />
-
-      {/* New Order Notice Modal */}
-      <Modal
-        isOpen={isNewOrderNoticeOpen}
-        onClose={() => setIsNewOrderNoticeOpen(false)}
-        title="Nova Ordem de Serviço"
-        maxWidth="sm"
-        footer={
-          <button
-            type="button"
-            onClick={() => setIsNewOrderNoticeOpen(false)}
-            className="w-full px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors"
-          >
-            Entendido
-          </button>
-        }
-      >
-        <div className="flex items-start gap-3 text-xs text-slate-600">
-          <Info className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <p className="font-semibold text-slate-800">
-              Formulário Completo de Abertura de O.S.
-            </p>
-            <p>
-              O formulário detalhado de abertura de O.S. com seleção dinâmica de peças, serviços,
-              cálculo de descontos e totais em tempo real faz parte do ticket <strong>ELI-17</strong>.
-            </p>
-            <p className="text-slate-500">
-              No painel atual (ENG-16), você já pode filtrar, inspecionar em tabela ou Kanban e
-              realizar transições de status com auditoria completa!
-            </p>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };

@@ -7,6 +7,8 @@ import type {
   UpdateWorkOrderStatusInput,
   PaginatedResponse,
   WorkOrderLog,
+  CreateWorkOrderInput,
+  UpdateWorkOrderInput,
 } from '@/types';
 
 export const WORK_ORDERS_QUERY_KEY = ['work-orders'] as const;
@@ -76,3 +78,35 @@ export function useUpdateWorkOrderStatus() {
     },
   });
 }
+
+export function useCreateWorkOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation<WorkOrder, ApiError, CreateWorkOrderInput>({
+    mutationFn: (data) =>
+      apiClient<WorkOrder>('/work-orders', {
+        method: 'POST',
+        body: data,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: WORK_ORDERS_QUERY_KEY });
+    },
+  });
+}
+
+export function useUpdateWorkOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation<WorkOrder, ApiError, { id: string; data: UpdateWorkOrderInput }>({
+    mutationFn: ({ id, data }) =>
+      apiClient<WorkOrder>(`/work-orders/${id}`, {
+        method: 'PUT',
+        body: data,
+      }),
+    onSuccess: (_updated, { id }) => {
+      queryClient.invalidateQueries({ queryKey: WORK_ORDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: [...WORK_ORDERS_QUERY_KEY, id] });
+    },
+  });
+}
+

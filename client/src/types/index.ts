@@ -181,3 +181,37 @@ export interface UpdateWorkOrderStatusInput {
   technicianId?: string;
   createdBy?: string;
 }
+
+export interface CreateWorkOrderItemInput {
+  type: WorkOrderItemType;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface CreateWorkOrderInput {
+  customerId: string;
+  technicianId?: string | null;
+  equipment: string;
+  serialNumber?: string | null;
+  reportedDefect: string;
+  priority?: WorkOrderPriority;
+  scheduledDate?: string | null;
+  discount?: number;
+  items: CreateWorkOrderItemInput[];
+  initialComment?: string;
+}
+
+export interface UpdateWorkOrderInput {
+  customerId?: string;
+  technicianId?: string | null;
+  equipment?: string;
+  serialNumber?: string | null;
+  reportedDefect?: string;
+  technicalDiagnosis?: string | null;
+  priority?: WorkOrderPriority;
+  scheduledDate?: string | null;
+  discount?: number;
+  items?: CreateWorkOrderItemInput[];
+}
+
