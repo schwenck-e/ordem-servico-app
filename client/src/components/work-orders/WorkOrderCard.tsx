@@ -22,13 +22,12 @@ export const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
     <div className="bg-white rounded-lg border border-slate-200 p-3.5 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between gap-3">
       {/* Top Header: Order Number and Priority */}
       <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => onView(order)}
+        <Link
+          to={`/work-orders/${order.id}`}
           className="font-mono text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
         >
           {order.orderNumber}
-        </button>
+        </Link>
         <PriorityBadge priority={order.priority} />
       </div>
 

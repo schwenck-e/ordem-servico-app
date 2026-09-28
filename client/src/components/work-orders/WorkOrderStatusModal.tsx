@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/common/Badge';
 import { useUpdateWorkOrderStatus } from '@/hooks/useWorkOrders';
 import { useTechnicians } from '@/hooks/useTechnicians';
 import { useToast } from '@/hooks/useToast';
-import type { WorkOrderSummary, WorkOrderStatus } from '@/types';
+import type { WorkOrderSummary, WorkOrder, WorkOrderStatus } from '@/types';
 
 export const VALID_STATUS_TRANSITIONS: Record<WorkOrderStatus, WorkOrderStatus[]> = {
   OPEN: ['IN_PROGRESS', 'CANCELED'],
@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<WorkOrderStatus, string> = {
 };
 
 interface WorkOrderStatusModalProps {
-  order: WorkOrderSummary | null;
+  order: WorkOrderSummary | WorkOrder | null;
   isOpen: boolean;
   onClose: () => void;
 }

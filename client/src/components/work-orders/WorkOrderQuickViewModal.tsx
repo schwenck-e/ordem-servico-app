@@ -11,6 +11,7 @@ import {
   Loader2,
   Package,
   Edit2,
+  Eye,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { StatusBadge, PriorityBadge, Badge } from '@/components/common/Badge';
@@ -58,12 +59,23 @@ export const WorkOrderQuickViewModal: React.FC<WorkOrderQuickViewModalProps> = (
           <div className="flex items-center gap-2">
             {order && (
               <Link
+                to={`/work-orders/${order.id}`}
+                onClick={onClose}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-brand-700 bg-brand-50 border border-brand-200 rounded-lg hover:bg-brand-100 transition-colors"
+              >
+                <Eye className="w-4 h-4 text-brand-600" />
+                Ver Detalhes Completos
+              </Link>
+            )}
+
+            {order && (
+              <Link
                 to={`/work-orders/${order.id}/edit`}
                 onClick={onClose}
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors"
               >
                 <Edit2 className="w-4 h-4 text-slate-500" />
-                Editar Ordem Completa
+                Editar
               </Link>
             )}
 

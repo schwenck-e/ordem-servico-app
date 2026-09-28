@@ -145,7 +145,7 @@ export function WorkOrderFormPage() {
 
         const updated = await updateMutation.mutateAsync({ id, data: updatePayload });
         toast.success(`A ordem ${updated.orderNumber} foi atualizada com sucesso.`);
-        navigate('/work-orders');
+        navigate(`/work-orders/${updated.id}`);
       } else {
         const createPayload: CreateWorkOrderInput = {
           customerId: data.customerId,
@@ -171,7 +171,7 @@ export function WorkOrderFormPage() {
 
         const created = await createMutation.mutateAsync(createPayload);
         toast.success(`A ordem ${created.orderNumber} foi aberta com sucesso.`);
-        navigate('/work-orders');
+        navigate(`/work-orders/${created.id}`);
       }
     } catch (err: unknown) {
       const errorMsg =
