@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   User,
   Cpu,
@@ -9,6 +10,7 @@ import {
   ArrowRightLeft,
   Loader2,
   Package,
+  Edit2,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { StatusBadge, PriorityBadge, Badge } from '@/components/common/Badge';
@@ -53,19 +55,32 @@ export const WorkOrderQuickViewModal: React.FC<WorkOrderQuickViewModalProps> = (
             Fechar
           </button>
 
-          {order && !isTerminal && (
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onOpenStatusModal(order);
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors shadow-sm"
-            >
-              <ArrowRightLeft className="w-4 h-4" />
-              Alterar Status
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {order && (
+              <Link
+                to={`/work-orders/${order.id}/edit`}
+                onClick={onClose}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+              >
+                <Edit2 className="w-4 h-4 text-slate-500" />
+                Editar Ordem Completa
+              </Link>
+            )}
+
+            {order && !isTerminal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenStatusModal(order);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors shadow-sm"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                Alterar Status
+              </button>
+            )}
+          </div>
         </div>
       }
     >

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowRightLeft, Eye, User, Wrench, Calendar, Cpu } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRightLeft, Eye, Edit2, User, Wrench, Calendar, Cpu } from 'lucide-react';
 import { PriorityBadge } from '@/components/common/Badge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import type { WorkOrderSummary } from '@/types';
@@ -91,6 +92,15 @@ export const WorkOrderCard: React.FC<WorkOrderCardProps> = ({
           >
             <ArrowRightLeft className="w-3.5 h-3.5" />
           </button>
+
+          {/* Editar OS */}
+          <Link
+            to={`/work-orders/${order.id}/edit`}
+            title="Editar OS"
+            className="p-1.5 rounded-md border text-slate-600 hover:text-indigo-600 bg-white border-slate-200 hover:bg-indigo-50 transition-colors"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </Link>
 
           {/* Ver Detalhes */}
           <button
