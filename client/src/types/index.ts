@@ -217,3 +217,64 @@ export interface UpdateWorkOrderInput {
   items?: CreateWorkOrderItemInput[];
 }
 
+// ─── Métricas e Dashboard (ENG-20) ──────────────────────────────────────────
+
+export interface MetricsPeriodFilter {
+  startDate?: string;
+  endDate?: string;
+}
+
+export type PeriodPresetKey = 'today' | '7d' | '30d' | 'month' | 'year' | 'all' | 'custom';
+
+export interface MetricsSummaryFinancial {
+  totalRevenue: number;
+  pendingRevenue: number;
+  averageTicket: number;
+}
+
+export interface MetricsSummary {
+  totalOrders: number;
+  statusCounts: Record<WorkOrderStatus, number>;
+  financial: MetricsSummaryFinancial;
+  period: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+}
+
+export interface StatusMetricItem {
+  status: WorkOrderStatus;
+  count: number;
+  percentage: number;
+  totalAmount: number;
+}
+
+export interface MetricsByStatusResponse {
+  data: StatusMetricItem[];
+  totalOrders: number;
+  period: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+}
+
+export interface TechnicianMetricItem {
+  technicianId: string | null;
+  name: string;
+  email: string | null;
+  specialty: string | null;
+  isActive: boolean | null;
+  totalOrders: number;
+  completedOrders: number;
+  inProgressOrders: number;
+  pendingOrders: number;
+  totalRevenue: number;
+}
+
+export interface MetricsByTechnicianResponse {
+  data: TechnicianMetricItem[];
+  period: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+}
