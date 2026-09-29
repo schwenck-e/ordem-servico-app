@@ -58,7 +58,20 @@ fi
 # Link thoughts directory so it stays synced
 if [ -d "$REPO_ROOT/thoughts" ]; then
     echo "🧠 Linking thoughts directory..."
-    ln -sf "$REPO_ROOT/thoughts" "$WORKTREE_PATH/thoughts"
+    rm -rf "$WORKTREE_PATH/thoughts"
+    ln -s "$REPO_ROOT/thoughts" "$WORKTREE_PATH/thoughts"
+fi
+
+# Ensure hack/linear scripts are present
+if [ -f "$REPO_ROOT/hack/linear_comment.sh" ]; then
+    mkdir -p "$WORKTREE_PATH/hack"
+    cp "$REPO_ROOT/hack/linear_comment.sh" "$WORKTREE_PATH/hack/"
+    chmod +x "$WORKTREE_PATH/hack/linear_comment.sh"
+fi
+if [ -f "$REPO_ROOT/hack/linear_status.sh" ]; then
+    mkdir -p "$WORKTREE_PATH/hack"
+    cp "$REPO_ROOT/hack/linear_status.sh" "$WORKTREE_PATH/hack/"
+    chmod +x "$WORKTREE_PATH/hack/linear_status.sh"
 fi
 
 echo "✅ Worktree created successfully!"

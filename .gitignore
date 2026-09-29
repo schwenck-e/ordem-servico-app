@@ -39,3 +39,6 @@ pnpm-debug.log*
 
 # AI Agent local configs with secrets
 .antigravity/mcp_config.json
+
+# Humanlayer thoughts directory
+thoughts/
