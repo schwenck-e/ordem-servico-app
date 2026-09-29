@@ -7,6 +7,7 @@ import { healthRoutes } from './modules/health/health.routes';
 import { customerRoutes } from './modules/customers/customer.routes';
 import { technicianRoutes } from './modules/technicians/technician.routes';
 import { workOrderRoutes } from './modules/work-orders/work-order.routes';
+import { metricsRoutes } from './modules/metrics/metrics.routes';
 import { env } from './config/env';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -66,6 +67,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(customerRoutes, { prefix: '/customers' });
   await app.register(technicianRoutes, { prefix: '/technicians' });
   await app.register(workOrderRoutes, { prefix: '/work-orders' });
+  await app.register(metricsRoutes, { prefix: '/metrics' });
 
   return app;
 }
