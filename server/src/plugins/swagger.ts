@@ -20,7 +20,8 @@ export default fp(async (app) => {
         { name: 'Health', description: 'Monitoramento e integridade do sistema' },
         { name: 'Customers', description: 'Gestão de clientes' },
         { name: 'Technicians', description: 'Gestão de técnicos' },
-        { name: 'WorkOrders', description: 'Gestão e workflow de ordens de serviço' }
+        { name: 'WorkOrders', description: 'Gestão e workflow de ordens de serviço' },
+        { name: 'Metrics', description: 'Indicadores operacionais e métricas analíticas' }
       ]
     }
   });
