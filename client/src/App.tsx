@@ -7,27 +7,50 @@ import { WorkOrderFormPage } from '@/pages/WorkOrderFormPage';
 import { WorkOrderDetailPage } from '@/pages/WorkOrderDetailPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { TechniciansPage } from '@/pages/TechniciansPage';
+import { UsersPage } from '@/pages/UsersPage';
+import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ToastProvider } from '@/context/ToastContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 export const App: React.FC = () => {
   return (
     <ToastProvider>
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/work-orders" element={<WorkOrdersPage />} />
-            <Route path="/work-orders/new" element={<WorkOrderFormPage />} />
-            <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
-            <Route path="/work-orders/:id/edit" element={<WorkOrderFormPage />} />
-            <Route path="/customers" element={<CustomersPage />} />
-            <Route path="/technicians" element={<TechniciansPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/work-orders" element={<WorkOrdersPage />} />
+              <Route path="/work-orders/new" element={<WorkOrderFormPage />} />
+              <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
+              <Route path="/work-orders/:id/edit" element={<WorkOrderFormPage />} />
+              <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/technicians" element={<TechniciansPage />} />
+
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <UsersPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </ToastProvider>
   );
 };
-
