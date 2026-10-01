@@ -11,10 +11,19 @@ import { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
 
 let app: FastifyInstance;
+let authToken: string;
 
 beforeAll(async () => {
   app = await buildApp();
   await app.ready();
+
+  // Generate a valid ADMIN JWT token for testing
+  authToken = app.jwt.sign({
+    id: '00000000-0000-0000-0000-000000000001',
+    name: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN'
+  });
 });
 
 afterAll(async () => {
@@ -49,6 +58,7 @@ async function createTestTechnician(data: Record<string, unknown> = validTechnic
   const res = await app.inject({
     method: 'POST',
     url: '/technicians',
+    headers: { Authorization: `Bearer ${authToken}` },
     payload: data,
   });
   return res;
@@ -112,6 +122,15 @@ describe('POST /technicians', () => {
     const body = res.json();
     expect(body.message).toContain('e-mail');
   });
+
+  it('should return 401 without authentication token', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/technicians',
+      payload: validTechnician,
+    });
+    expect(res.statusCode).toBe(401);
+  });
 });
 
 // ─── GET /technicians ───────────────────────────────────────────────────────
@@ -124,6 +143,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -143,6 +163,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     const body = res.json();
@@ -157,6 +178,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?search=Carlos',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -172,6 +194,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?search=Redes',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -187,6 +210,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?isActive=true',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -202,6 +226,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?isActive=false',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -217,6 +242,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?specialty=Redes',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -232,6 +258,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?page=1&limit=1',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -245,6 +272,7 @@ describe('GET /technicians', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians?page=0',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(400);
   });
@@ -259,6 +287,7 @@ describe('GET /technicians/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -274,6 +303,7 @@ describe('GET /technicians/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(404);
   });
@@ -282,6 +312,7 @@ describe('GET /technicians/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/technicians/not-a-uuid',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(400);
   });
@@ -296,6 +327,7 @@ describe('PUT /technicians/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         specialty: 'Software & Automação',
         phone: '(31) 99876-5432',
@@ -317,6 +349,7 @@ describe('PUT /technicians/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { isActive: false },
     });
 
@@ -330,6 +363,7 @@ describe('PUT /technicians/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: '/technicians/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { name: 'Updated Name' },
     });
     expect(res.statusCode).toBe(404);
@@ -342,6 +376,7 @@ describe('PUT /technicians/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/technicians/${second.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { email: validTechnician.email },
     });
     expect(res.statusCode).toBe(409);
@@ -353,6 +388,7 @@ describe('PUT /technicians/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {},
     });
     expect(res.statusCode).toBe(400);
@@ -368,6 +404,7 @@ describe('DELETE /technicians/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(204);
 
@@ -375,6 +412,7 @@ describe('DELETE /technicians/:id', () => {
     const getRes = await app.inject({
       method: 'GET',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(getRes.statusCode).toBe(404);
   });
@@ -383,6 +421,7 @@ describe('DELETE /technicians/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: '/technicians/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(404);
   });
@@ -417,6 +456,7 @@ describe('DELETE /technicians/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(409);
     expect(res.json().message).toContain('ordens de serviço ativas');
@@ -452,7 +492,25 @@ describe('DELETE /technicians/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(204);
+  });
+
+  it('should return 403 when OPERATOR tries to delete technician', async () => {
+    const created = (await createTestTechnician()).json();
+    const operatorToken = app.jwt.sign({
+      id: '00000000-0000-0000-0000-000000000002',
+      name: 'Test Operator',
+      email: 'operator@test.com',
+      role: 'OPERATOR'
+    });
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/technicians/${created.id}`,
+      headers: { Authorization: `Bearer ${operatorToken}` },
+    });
+    expect(res.statusCode).toBe(403);
   });
 });

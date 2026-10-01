@@ -10,10 +10,19 @@ import { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
 
 let app: FastifyInstance;
+let authToken: string;
 
 beforeAll(async () => {
   app = await buildApp();
   await app.ready();
+
+  // Generate a valid ADMIN JWT token for testing
+  authToken = app.jwt.sign({
+    id: '00000000-0000-0000-0000-000000000001',
+    name: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN'
+  });
 });
 
 afterAll(async () => {
@@ -28,6 +37,7 @@ beforeEach(async () => {
   await app.prisma.technician.deleteMany();
   await app.prisma.customer.deleteMany();
 });
+
 
 // ─── Helpers de Teste ───────────────────────────────────────────────────────
 
@@ -83,6 +93,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload,
     });
 
@@ -125,6 +136,7 @@ describe('POST /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Impressora Epson',
@@ -171,6 +183,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload,
     });
 
@@ -201,6 +214,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Asus',
@@ -218,6 +232,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Lenovo',
@@ -244,6 +259,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Lenovo',
@@ -269,6 +285,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Desktop Gamer',
@@ -297,6 +314,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: inactiveTechnician.id,
@@ -321,6 +339,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: 'a0000000-0000-0000-0000-000000000000',
         equipment: 'Celular Samsung',
@@ -346,6 +365,7 @@ describe('POST /work-orders', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: 'b0000000-0000-0000-0000-000000000000',
@@ -377,6 +397,7 @@ describe('GET /work-orders', () => {
       await app.inject({
         method: 'POST',
         url: '/work-orders',
+        headers: { Authorization: `Bearer ${authToken}` },
         payload: {
           customerId: customer.id,
           equipment: `Equipamento ${i}`,
@@ -389,6 +410,7 @@ describe('GET /work-orders', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders?page=1&limit=2',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -406,6 +428,7 @@ describe('GET /work-orders', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Servidor ProLiant',
@@ -425,6 +448,7 @@ describe('GET /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook HP',
@@ -436,6 +460,7 @@ describe('GET /work-orders', () => {
     const resCompleted = await app.inject({
       method: 'GET',
       url: '/work-orders?status=COMPLETED',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(resCompleted.statusCode).toBe(200);
     const completedBody = resCompleted.json();
@@ -445,6 +470,7 @@ describe('GET /work-orders', () => {
     const resOpen = await app.inject({
       method: 'GET',
       url: '/work-orders?status=OPEN',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(resOpen.statusCode).toBe(200);
     expect(resOpen.json().data).toHaveLength(1);
@@ -456,6 +482,7 @@ describe('GET /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Urgente',
@@ -468,6 +495,7 @@ describe('GET /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Normal',
@@ -480,6 +508,7 @@ describe('GET /work-orders', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders?priority=URGENT',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -496,6 +525,7 @@ describe('GET /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Sem Técnico',
@@ -508,6 +538,7 @@ describe('GET /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -520,6 +551,7 @@ describe('GET /work-orders', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders?technicianId=unassigned',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -535,6 +567,7 @@ describe('GET /work-orders', () => {
     await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'PlayStation 5 Slim',
@@ -546,6 +579,7 @@ describe('GET /work-orders', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders?search=PlayStation',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -554,6 +588,7 @@ describe('GET /work-orders', () => {
     const resCustomerSearch = await app.inject({
       method: 'GET',
       url: '/work-orders?search=Carlos Eduardo',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(resCustomerSearch.statusCode).toBe(200);
@@ -571,6 +606,7 @@ describe('GET /work-orders/:id', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -585,6 +621,7 @@ describe('GET /work-orders/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -600,6 +637,7 @@ describe('GET /work-orders/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(404);
@@ -610,6 +648,7 @@ describe('GET /work-orders/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders/id-invalido',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(400);
@@ -625,6 +664,7 @@ describe('PUT /work-orders/:id', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Dell',
@@ -638,6 +678,7 @@ describe('PUT /work-orders/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         equipment: 'Notebook Dell Inspiron 5590',
         technicalDiagnosis: 'Curto circuito na linha secundária de 3.3V resolvido.',
@@ -659,6 +700,7 @@ describe('PUT /work-orders/:id', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Desktop Office',
@@ -672,6 +714,7 @@ describe('PUT /work-orders/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         discount: 20.0,
         items: [
@@ -708,6 +751,7 @@ describe('PUT /work-orders/:id', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Acer',
@@ -721,6 +765,7 @@ describe('PUT /work-orders/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         discount: 30.0,
       },
@@ -739,6 +784,7 @@ describe('PUT /work-orders/:id', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Acer',
@@ -752,6 +798,7 @@ describe('PUT /work-orders/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         discount: 150.0,
       },
@@ -765,6 +812,7 @@ describe('PUT /work-orders/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: '/work-orders/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         equipment: 'Novo Equipamento',
       },
@@ -779,6 +827,7 @@ describe('PUT /work-orders/:id', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Notebook Acer',
@@ -792,6 +841,7 @@ describe('PUT /work-orders/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {},
     });
 
@@ -811,6 +861,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -825,6 +876,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         comment: 'Técnico iniciou a desmontagem do equipamento.',
@@ -842,7 +894,8 @@ describe('PATCH /work-orders/:id/status', () => {
     expect(logs[1].previousStatus).toBe('OPEN');
     expect(logs[1].newStatus).toBe('IN_PROGRESS');
     expect(logs[1].comment).toBe('Técnico iniciou a desmontagem do equipamento.');
-    expect(logs[1].createdBy).toBe(technician.name);
+    // createdBy is now set from the authenticated JWT user name (not the technician)
+    expect(logs[1].createdBy).toBe('Test Admin');
   });
 
   it('deve transicionar de OPEN para IN_PROGRESS atribuindo técnico ativo no payload (200)', async () => {
@@ -852,6 +905,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Impressora Epson L3150',
@@ -865,6 +919,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         technicianId: technician.id,
@@ -887,6 +942,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Monitor LG Ultrawide',
@@ -900,6 +956,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
       },
@@ -919,6 +976,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'MacBook Pro 14',
@@ -932,6 +990,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         technicianId: inactiveTechnician.id,
@@ -948,6 +1007,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Desktop Gamer',
@@ -961,6 +1021,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         technicianId: '00000000-0000-0000-0000-000000000000',
@@ -978,6 +1039,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -993,6 +1055,7 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { status: 'IN_PROGRESS' },
     });
 
@@ -1000,6 +1063,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const resWaitingParts = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'WAITING_PARTS',
         comment: 'Aguardando chegada dos chips de memória Samsung.',
@@ -1012,6 +1076,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const resResumeParts = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         comment: 'Peças chegaram, retomando reparo.',
@@ -1024,6 +1089,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const resWaitingApproval = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'WAITING_APPROVAL',
         comment: 'Orçamento enviado para aprovação do cliente via WhatsApp.',
@@ -1036,6 +1102,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const resResumeApproval = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         comment: 'Cliente aprovou o orçamento adicional.',
@@ -1052,6 +1119,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -1066,12 +1134,14 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { status: 'IN_PROGRESS' },
     });
 
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'WAITING_PARTS',
       },
@@ -1088,6 +1158,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -1103,12 +1174,14 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { status: 'IN_PROGRESS' },
     });
 
     await app.inject({
       method: 'PUT',
       url: `/work-orders/${orderId}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         technicalDiagnosis: 'Metal líquido oxidado foi substituído e limpeza do dissipador efetuada com sucesso.',
       },
@@ -1117,6 +1190,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         comment: 'Testes de estresse executados por 2 horas sem desligamento.',
@@ -1137,6 +1211,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -1151,12 +1226,14 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { status: 'IN_PROGRESS' },
     });
 
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         technicalDiagnosis: 'Tela LCD/Touch screen substituída por peça original; calibragem concluída.',
@@ -1178,6 +1255,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -1192,12 +1270,14 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { status: 'IN_PROGRESS' },
     });
 
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
       },
@@ -1213,6 +1293,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Impressora HP',
@@ -1226,6 +1307,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'CANCELED',
         comment: 'Cliente desistiu do orçamento e retirou o equipamento sem reparo.',
@@ -1243,6 +1325,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Impressora HP',
@@ -1256,6 +1339,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'CANCELED',
       },
@@ -1271,6 +1355,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Tablet Samsung',
@@ -1287,6 +1372,7 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         technicianId: technician.id,
@@ -1296,6 +1382,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
       },
@@ -1311,6 +1398,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Tablet Samsung',
@@ -1324,6 +1412,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         technicalDiagnosis: 'Concluído diretamente.',
@@ -1341,6 +1430,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -1356,12 +1446,14 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { status: 'IN_PROGRESS' },
     });
 
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         technicalDiagnosis: 'Conector de carga ressoldado.',
@@ -1372,6 +1464,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
       },
@@ -1387,6 +1480,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'Roteador Wi-Fi',
@@ -1400,6 +1494,7 @@ describe('PATCH /work-orders/:id/status', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'CANCELED',
         comment: 'Equipamento sem conserto viável.',
@@ -1409,6 +1504,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
       },
@@ -1422,6 +1518,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/work-orders/00000000-0000-0000-0000-000000000000/status',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
       },
@@ -1435,6 +1532,7 @@ describe('PATCH /work-orders/:id/status', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/work-orders/invalido-uuid/status',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
       },
@@ -1455,6 +1553,7 @@ describe('GET /work-orders/:id/timeline', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         technicianId: technician.id,
@@ -1471,6 +1570,7 @@ describe('GET /work-orders/:id/timeline', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         comment: 'Iniciada clonagem do disco.',
@@ -1482,6 +1582,7 @@ describe('GET /work-orders/:id/timeline', () => {
     await app.inject({
       method: 'PATCH',
       url: `/work-orders/${orderId}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         technicalDiagnosis: 'SSD NVMe 500GB instalado e Windows 11 clonado com sucesso.',
@@ -1493,6 +1594,7 @@ describe('GET /work-orders/:id/timeline', () => {
     const res = await app.inject({
       method: 'GET',
       url: `/work-orders/${orderId}/timeline`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -1524,6 +1626,7 @@ describe('GET /work-orders/:id/timeline', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders/00000000-0000-0000-0000-000000000000/timeline',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(404);
@@ -1534,6 +1637,7 @@ describe('GET /work-orders/:id/timeline', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/work-orders/uuid-invalido/timeline',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(400);

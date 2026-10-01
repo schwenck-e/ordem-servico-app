@@ -6,7 +6,9 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   DATABASE_URL: z.string().default('file:./dev.db'),
-  CORS_ORIGIN: z.string().default('http://localhost:5173')
+  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  JWT_SECRET: z.string().default('supersecret-ordem-servico-jwt-key-2026-development-only'),
+  JWT_EXPIRES_IN: z.string().default('8h')
 });
 
 const _env = envSchema.safeParse(process.env);

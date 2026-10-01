@@ -18,6 +18,7 @@ export const workOrderRoutes: FastifyPluginAsync = async (app) => {
   // POST / — Criar nova Ordem de Serviço
   app.post('/', {
     schema: createWorkOrderSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const data = createWorkOrderSchema.parse(request.body);
     const workOrder = await workOrderService.createWorkOrder(app.prisma, data);
@@ -27,6 +28,7 @@ export const workOrderRoutes: FastifyPluginAsync = async (app) => {
   // GET / — Listar Ordens de Serviço (paginado, filtros e busca)
   app.get('/', {
     schema: listWorkOrdersSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const query = listWorkOrdersQuerySchema.parse(request.query);
     const result = await workOrderService.listWorkOrders(app.prisma, query);
@@ -36,6 +38,7 @@ export const workOrderRoutes: FastifyPluginAsync = async (app) => {
   // GET /:id — Buscar Ordem de Serviço por UUID
   app.get('/:id', {
     schema: getWorkOrderSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const { id } = workOrderIdParamSchema.parse(request.params);
     const workOrder = await workOrderService.getWorkOrderById(app.prisma, id);
@@ -45,6 +48,7 @@ export const workOrderRoutes: FastifyPluginAsync = async (app) => {
   // PUT /:id — Atualizar dados e itens da Ordem de Serviço
   app.put('/:id', {
     schema: updateWorkOrderSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const { id } = workOrderIdParamSchema.parse(request.params);
     const data = updateWorkOrderSchema.parse(request.body);
@@ -55,20 +59,27 @@ export const workOrderRoutes: FastifyPluginAsync = async (app) => {
   // PATCH /:id/status — Alterar status da Ordem de Serviço com validação de fluxo e auditoria
   app.patch('/:id/status', {
     schema: updateWorkOrderStatusSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const { id } = workOrderIdParamSchema.parse(request.params);
     const data = updateWorkOrderStatusSchema.parse(request.body);
-    const workOrder = await workOrderService.updateWorkOrderStatus(app.prisma, id, data);
+
+    // Inject authenticated user's name as the audit author
+    const createdBy = request.user.name || request.user.email;
+    const workOrder = await workOrderService.updateWorkOrderStatus(app.prisma, id, {
+      ...data,
+      createdBy: data.createdBy || createdBy
+    });
     return reply.status(200).send(workOrder);
   });
 
   // GET /:id/timeline — Consultar linha do tempo / histórico de auditoria da Ordem de Serviço
   app.get('/:id/timeline', {
     schema: getWorkOrderTimelineSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const { id } = workOrderIdParamSchema.parse(request.params);
     const timeline = await workOrderService.getWorkOrderTimeline(app.prisma, id);
     return reply.status(200).send(timeline);
   });
 };
-

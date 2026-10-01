@@ -11,10 +11,19 @@ import { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
 
 let app: FastifyInstance;
+let authToken: string;
 
 beforeAll(async () => {
   app = await buildApp();
   await app.ready();
+
+  // Generate a valid ADMIN JWT token for testing
+  authToken = app.jwt.sign({
+    id: '00000000-0000-0000-0000-000000000001',
+    name: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN'
+  });
 });
 
 afterAll(async () => {
@@ -51,6 +60,7 @@ async function createTestCustomer(data = validCpfCustomer) {
   const res = await app.inject({
     method: 'POST',
     url: '/customers',
+    headers: { Authorization: `Bearer ${authToken}` },
     payload: data,
   });
   return res;
@@ -112,6 +122,15 @@ describe('POST /customers', () => {
     const body = res.json();
     expect(body.message).toContain('documento');
   });
+
+  it('should return 401 without authentication token', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/customers',
+      payload: validCpfCustomer,
+    });
+    expect(res.statusCode).toBe(401);
+  });
 });
 
 // ─── GET /customers ─────────────────────────────────────────────────────────
@@ -124,6 +143,7 @@ describe('GET /customers', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -144,6 +164,7 @@ describe('GET /customers', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers?search=Maria',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -159,6 +180,7 @@ describe('GET /customers', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers?search=11.222',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -174,6 +196,7 @@ describe('GET /customers', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers?page=1&limit=1',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -187,6 +210,7 @@ describe('GET /customers', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers?page=0',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(400);
   });
@@ -195,8 +219,17 @@ describe('GET /customers', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers?limit=0',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(400);
+  });
+
+  it('should return 401 without authentication token', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/customers',
+    });
+    expect(res.statusCode).toBe(401);
   });
 });
 
@@ -209,6 +242,7 @@ describe('GET /customers/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -223,6 +257,7 @@ describe('GET /customers/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(404);
   });
@@ -231,6 +266,7 @@ describe('GET /customers/:id', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/customers/not-a-uuid',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(400);
   });
@@ -245,6 +281,7 @@ describe('PUT /customers/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         name: 'Maria Oliveira Santos',
         phone: '(21) 91234-5678',
@@ -263,6 +300,7 @@ describe('PUT /customers/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: '/customers/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { name: 'Updated Name' },
     });
     expect(res.statusCode).toBe(404);
@@ -275,6 +313,7 @@ describe('PUT /customers/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/customers/${second.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: { document: validCpfCustomer.document },
     });
     expect(res.statusCode).toBe(409);
@@ -286,6 +325,7 @@ describe('PUT /customers/:id', () => {
     const res = await app.inject({
       method: 'PUT',
       url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {},
     });
     expect(res.statusCode).toBe(400);
@@ -301,6 +341,7 @@ describe('DELETE /customers/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(204);
 
@@ -308,6 +349,7 @@ describe('DELETE /customers/:id', () => {
     const getRes = await app.inject({
       method: 'GET',
       url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(getRes.statusCode).toBe(404);
   });
@@ -316,6 +358,7 @@ describe('DELETE /customers/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: '/customers/00000000-0000-0000-0000-000000000000',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(404);
   });
@@ -338,8 +381,26 @@ describe('DELETE /customers/:id', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(res.statusCode).toBe(409);
     expect(res.json().message).toContain('ordens de serviço');
+  });
+
+  it('should return 403 when OPERATOR tries to delete customer', async () => {
+    const created = (await createTestCustomer()).json();
+    const operatorToken = app.jwt.sign({
+      id: '00000000-0000-0000-0000-000000000002',
+      name: 'Test Operator',
+      email: 'operator@test.com',
+      role: 'OPERATOR'
+    });
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/customers/${created.id}`,
+      headers: { Authorization: `Bearer ${operatorToken}` },
+    });
+    expect(res.statusCode).toBe(403);
   });
 });

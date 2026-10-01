@@ -3,7 +3,10 @@ import { ZodError } from 'zod';
 import corsPlugin from './plugins/cors';
 import swaggerPlugin from './plugins/swagger';
 import prismaPlugin from './plugins/prisma';
+import authPlugin from './plugins/auth';
 import { healthRoutes } from './modules/health/health.routes';
+import { authRoutes } from './modules/auth/auth.routes';
+import { userRoutes } from './modules/users/user.routes';
 import { customerRoutes } from './modules/customers/customer.routes';
 import { technicianRoutes } from './modules/technicians/technician.routes';
 import { workOrderRoutes } from './modules/work-orders/work-order.routes';
@@ -61,9 +64,16 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(corsPlugin);
   await app.register(swaggerPlugin);
   await app.register(prismaPlugin);
+  await app.register(authPlugin);
 
-  // Registro de Rotas
+  // Registro de Rotas — Públicas
   await app.register(healthRoutes, { prefix: '/health' });
+
+  // Registro de Rotas — Autenticação e Usuários
+  await app.register(authRoutes, { prefix: '/auth' });
+  await app.register(userRoutes, { prefix: '/users' });
+
+  // Registro de Rotas — Domínio (protegidas por autenticação)
   await app.register(customerRoutes, { prefix: '/customers' });
   await app.register(technicianRoutes, { prefix: '/technicians' });
   await app.register(workOrderRoutes, { prefix: '/work-orders' });

@@ -13,6 +13,7 @@ export const metricsRoutes: FastifyPluginAsync = async (app) => {
     '/summary',
     {
       schema: metricsSummarySwaggerSchema,
+      preHandler: [app.authenticate]
     },
     async (request, reply) => {
       const query = metricsPeriodQuerySchema.parse(request.query);
@@ -26,6 +27,7 @@ export const metricsRoutes: FastifyPluginAsync = async (app) => {
     '/by-status',
     {
       schema: metricsByStatusSwaggerSchema,
+      preHandler: [app.authenticate]
     },
     async (request, reply) => {
       const query = metricsPeriodQuerySchema.parse(request.query);
@@ -39,6 +41,7 @@ export const metricsRoutes: FastifyPluginAsync = async (app) => {
     '/by-technician',
     {
       schema: metricsByTechnicianSwaggerSchema,
+      preHandler: [app.authenticate]
     },
     async (request, reply) => {
       const query = metricsPeriodQuerySchema.parse(request.query);
