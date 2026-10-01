@@ -16,6 +16,7 @@ export const technicianRoutes: FastifyPluginAsync = async (app) => {
   // POST / — Cadastrar novo técnico
   app.post('/', {
     schema: createTechnicianSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const data = createTechnicianSchema.parse(request.body);
     const technician = await technicianService.createTechnician(app.prisma, data);
@@ -25,6 +26,7 @@ export const technicianRoutes: FastifyPluginAsync = async (app) => {
   // GET / — Listar técnicos (paginado, com busca e filtros)
   app.get('/', {
     schema: listTechniciansSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const query = listTechniciansQuerySchema.parse(request.query);
     const result = await technicianService.listTechnicians(app.prisma, query);
@@ -34,6 +36,7 @@ export const technicianRoutes: FastifyPluginAsync = async (app) => {
   // GET /:id — Buscar técnico por UUID
   app.get('/:id', {
     schema: getTechnicianSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const { id } = technicianIdParamSchema.parse(request.params);
     const technician = await technicianService.getTechnicianById(app.prisma, id);
@@ -43,6 +46,7 @@ export const technicianRoutes: FastifyPluginAsync = async (app) => {
   // PUT /:id — Atualizar técnico
   app.put('/:id', {
     schema: updateTechnicianSwaggerSchema,
+    preHandler: [app.authenticate]
   }, async (request, reply) => {
     const { id } = technicianIdParamSchema.parse(request.params);
     const data = updateTechnicianSchema.parse(request.body);
@@ -50,9 +54,10 @@ export const technicianRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(200).send(technician);
   });
 
-  // DELETE /:id — Excluir técnico
+  // DELETE /:id — Excluir técnico (ADMIN apenas)
   app.delete('/:id', {
     schema: deleteTechnicianSwaggerSchema,
+    preHandler: [app.authenticate, app.requireRole(['ADMIN'])]
   }, async (request, reply) => {
     const { id } = technicianIdParamSchema.parse(request.params);
     await technicianService.deleteTechnician(app.prisma, id);

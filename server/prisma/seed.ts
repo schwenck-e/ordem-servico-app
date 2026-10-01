@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -11,8 +12,34 @@ async function main() {
   await prisma.workOrder.deleteMany();
   await prisma.technician.deleteMany();
   await prisma.customer.deleteMany();
+  await prisma.user.deleteMany();
 
   console.log('🧹 Registros anteriores removidos com sucesso.');
+
+  // 0. Usuários (Administrador e Operador)
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  await prisma.user.create({
+    data: {
+      name: 'Administrador do Sistema',
+      email: 'admin@empresa.com',
+      passwordHash: adminPassword,
+      role: 'ADMIN',
+      isActive: true,
+    }
+  });
+
+  const operatorPassword = await bcrypt.hash('operador123', 10);
+  await prisma.user.create({
+    data: {
+      name: 'Operador Técnico',
+      email: 'operador@empresa.com',
+      passwordHash: operatorPassword,
+      role: 'OPERATOR',
+      isActive: true,
+    }
+  });
+
+  console.log('🔐 2 Usuários criados com sucesso (admin@empresa.com / operador@empresa.com).');
 
   // 1. Clientes
   const customerLawFirm = await prisma.customer.create({

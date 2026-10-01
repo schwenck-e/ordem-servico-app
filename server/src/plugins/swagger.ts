@@ -18,11 +18,22 @@ export default fp(async (app) => {
       ],
       tags: [
         { name: 'Health', description: 'Monitoramento e integridade do sistema' },
+        { name: 'Auth', description: 'Autenticação e gestão de sessão JWT' },
+        { name: 'Users', description: 'Gestão de usuários e controle de acesso (ADMIN)' },
         { name: 'Customers', description: 'Gestão de clientes' },
         { name: 'Technicians', description: 'Gestão de técnicos' },
         { name: 'WorkOrders', description: 'Gestão e workflow de ordens de serviço' },
         { name: 'Metrics', description: 'Indicadores operacionais e métricas analíticas' }
-      ]
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT'
+          }
+        }
+      }
     }
   });
 
@@ -36,3 +47,4 @@ export default fp(async (app) => {
     transformStaticCSP: (header) => header
   });
 });
+

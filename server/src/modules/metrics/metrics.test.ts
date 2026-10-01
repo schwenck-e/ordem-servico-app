@@ -10,10 +10,19 @@ import { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
 
 let app: FastifyInstance;
+let authToken: string;
 
 beforeAll(async () => {
   app = await buildApp();
   await app.ready();
+
+  // Generate a valid ADMIN JWT token for testing
+  authToken = app.jwt.sign({
+    id: '00000000-0000-0000-0000-000000000001',
+    name: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN'
+  });
 });
 
 afterAll(async () => {
@@ -28,6 +37,7 @@ beforeEach(async () => {
   await app.prisma.technician.deleteMany();
   await app.prisma.customer.deleteMany();
 });
+
 
 // ─── Helpers de Teste ───────────────────────────────────────────────────────
 
@@ -88,6 +98,7 @@ describe('GET /metrics/summary', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/summary',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -164,6 +175,7 @@ describe('GET /metrics/summary', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/summary',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -214,6 +226,7 @@ describe('GET /metrics/summary', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/summary?startDate=2026-09-01T00:00:00Z&endDate=2026-09-30T23:59:59Z',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -241,6 +254,7 @@ describe('GET /metrics/summary', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/summary?startDate=2026-09-15&endDate=2026-09-15',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -253,6 +267,7 @@ describe('GET /metrics/summary', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/summary?startDate=2026-09-30&endDate=2026-09-01',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(400);
@@ -265,6 +280,7 @@ describe('GET /metrics/summary', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/summary?startDate=invalido',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(400);
@@ -278,6 +294,7 @@ describe('GET /metrics/by-status', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-status',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -325,6 +342,7 @@ describe('GET /metrics/by-status', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-status',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -385,6 +403,7 @@ describe('GET /metrics/by-status', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-status?startDate=2026-06-01T00:00:00Z&endDate=2026-06-30T23:59:59Z',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -401,6 +420,7 @@ describe('GET /metrics/by-status', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-status?startDate=2026-12-31&endDate=2026-01-01',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(400);
@@ -414,6 +434,7 @@ describe('GET /metrics/by-technician', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-technician',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -433,6 +454,7 @@ describe('GET /metrics/by-technician', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-technician',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -498,6 +520,7 @@ describe('GET /metrics/by-technician', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-technician',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -571,6 +594,7 @@ describe('GET /metrics/by-technician', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-technician?startDate=2026-05-01T00:00:00Z&endDate=2026-05-31T23:59:59Z',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -586,6 +610,7 @@ describe('GET /metrics/by-technician', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/metrics/by-technician?startDate=2026-05-31&endDate=2026-05-01',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(res.statusCode).toBe(400);

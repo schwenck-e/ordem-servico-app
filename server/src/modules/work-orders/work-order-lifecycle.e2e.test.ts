@@ -10,10 +10,19 @@ import { FastifyInstance } from 'fastify';
 import { buildApp } from '../../app';
 
 let app: FastifyInstance;
+let authToken: string;
 
 beforeAll(async () => {
   app = await buildApp();
   await app.ready();
+
+  // Generate a valid ADMIN JWT token for testing
+  authToken = app.jwt.sign({
+    id: '00000000-0000-0000-0000-000000000001',
+    name: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN'
+  });
 });
 
 afterAll(async () => {
@@ -29,6 +38,7 @@ beforeEach(async () => {
   await app.prisma.customer.deleteMany();
 });
 
+
 describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
   it('deve executar o fluxo integrado ponta a ponta: abertura, transições de status, laudo e fechamento, refletindo na timeline e nas métricas', async () => {
     // -------------------------------------------------------------------------
@@ -37,6 +47,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const customerRes = await app.inject({
       method: 'POST',
       url: '/customers',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         name: 'Carlos Eduardo Silva',
         document: '529.982.247-25',
@@ -57,6 +68,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const tech1Res = await app.inject({
       method: 'POST',
       url: '/technicians',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         name: 'Roberto Tech Lead',
         email: 'roberto.lead@assistencia.com',
@@ -72,6 +84,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const tech2Res = await app.inject({
       method: 'POST',
       url: '/technicians',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         name: 'Ana Carolina Especialista',
         email: 'ana.especialista@assistencia.com',
@@ -91,6 +104,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const createWoRes = await app.inject({
       method: 'POST',
       url: '/work-orders',
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         customerId: customer.id,
         equipment: 'MacBook Pro M1 16"',
@@ -134,6 +148,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const inProgressRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         technicianId: techPrimary.id,
@@ -152,6 +167,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const updateWoRes = await app.inject({
       method: 'PUT',
       url: `/work-orders/${order.id}`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         equipment: 'MacBook Pro M1 16"',
         serialNumber: 'C02G1234MD6R',
@@ -201,6 +217,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const waitingPartsRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'WAITING_PARTS',
         comment: 'Aguardando entrega do lote de ventoinhas originais pelo fornecedor oficial.',
@@ -216,6 +233,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const resumeProgressRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         comment: 'Peças recebidas no estoque. Instalação e testes de estresse iniciados.',
@@ -231,6 +249,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const waitingApprovalRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'WAITING_APPROVAL',
         comment: 'Orçamento com acréscimo de ventoinha enviado por WhatsApp ao cliente.',
@@ -242,6 +261,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const approveProgressRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'IN_PROGRESS',
         comment: 'Cliente Carlos aprovou o orçamento adicional. Prosseguindo com montagem.',
@@ -259,6 +279,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const completeRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         technicalDiagnosis: finalDiagnosis,
@@ -279,6 +300,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const timelineRes = await app.inject({
       method: 'GET',
       url: `/work-orders/${order.id}/timeline`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     expect(timelineRes.statusCode).toBe(200);
@@ -319,6 +341,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const summaryRes = await app.inject({
       method: 'GET',
       url: '/metrics/summary',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(summaryRes.statusCode).toBe(200);
     const summary = summaryRes.json();
@@ -333,6 +356,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const byStatusRes = await app.inject({
       method: 'GET',
       url: '/metrics/by-status',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(byStatusRes.statusCode).toBe(200);
     const byStatus = byStatusRes.json();
@@ -345,6 +369,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const byTechRes = await app.inject({
       method: 'GET',
       url: '/metrics/by-technician',
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(byTechRes.statusCode).toBe(200);
     const byTech = byTechRes.json();
@@ -396,6 +421,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'COMPLETED',
         comment: 'Tentativa de conclusão sem laudo',
@@ -435,6 +461,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const cancelRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'CANCELED',
         comment: 'Cliente desistiu do reparo por considerar valor de reposição inviável.',
@@ -449,6 +476,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const timelineRes = await app.inject({
       method: 'GET',
       url: `/work-orders/${order.id}/timeline`,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     expect(timelineRes.statusCode).toBe(200);
     const timeline = timelineRes.json();
@@ -463,6 +491,7 @@ describe('E2E: Ciclo de Vida Completo da Ordem de Serviço', () => {
     const attemptReopenRes = await app.inject({
       method: 'PATCH',
       url: `/work-orders/${order.id}/status`,
+      headers: { Authorization: `Bearer ${authToken}` },
       payload: {
         status: 'OPEN',
         comment: 'Tentando reabrir OS cancelada',
