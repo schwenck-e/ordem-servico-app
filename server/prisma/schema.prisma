@@ -116,3 +116,25 @@ model User {
 
   @@map("users")
 }
+
+model Company {
+  id             String   @id @default(uuid())
+  name           String   // Razão Social
+  tradeName      String   // Nome Fantasia
+  cnpj           String   @unique
+  ie             String?  // Inscrição Estadual (opcional)
+  email          String
+  phone          String
+  address        String
+  city           String
+  state          String   // UF (2 caracteres)
+  zipCode        String   // CEP
+  logoUrl        String?
+  warrantyTerms  String?  // Termos legais padrão de garantia
+  workOrderNotes String?  // Observações e instruções padrão da OS
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("company")
+}
+
