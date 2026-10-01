@@ -6,17 +6,32 @@ import {
   Users,
   Wrench,
   Layers,
+  ShieldCheck,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
+}
+
+const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
   { name: 'Clientes', href: '/customers', icon: Users },
   { name: 'Técnicos', href: '/technicians', icon: Wrench },
+  { name: 'Usuários', href: '/users', icon: ShieldCheck, adminOnly: true },
 ];
 
 export const Sidebar: React.FC = () => {
+  const { user } = useAuth();
+
+  const filteredNavigation = navigation.filter(
+    (item) => !item.adminOnly || user?.role === 'ADMIN'
+  );
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-screen print:hidden">
       {/* Brand / Logo */}
@@ -34,7 +49,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Navigation Links */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navigation.map((item) => {
+        {filteredNavigation.map((item) => {
           const Icon = item.icon;
           return (
             <NavLink

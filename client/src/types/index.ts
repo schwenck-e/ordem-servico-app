@@ -217,6 +217,53 @@ export interface UpdateWorkOrderInput {
   items?: CreateWorkOrderItemInput[];
 }
 
+// ─── Autenticação e Usuários (ENG-23) ───────────────────────────────────────
+
+export type UserRole = 'ADMIN' | 'OPERATOR';
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+  isActive?: boolean;
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: UserRole;
+  isActive?: boolean;
+}
+
 // ─── Métricas e Dashboard (ENG-20) ──────────────────────────────────────────
 
 export interface MetricsPeriodFilter {

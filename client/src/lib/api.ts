@@ -12,6 +12,23 @@ export class ApiError extends Error {
   }
 }
 
+export const TOKEN_STORAGE_KEY = '@ordem-servico:token';
+export const USER_STORAGE_KEY = '@ordem-servico:user';
+
+export function getStoredToken(): string | null {
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+export function setStoredSession(token: string, user: unknown): void {
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+}
+
+export function clearStoredSession(): void {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(USER_STORAGE_KEY);
+}
+
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   params?: Record<string, string | number | boolean | undefined>;
@@ -42,10 +59,14 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     !(body instanceof FormData) &&
     !(body instanceof Blob);
 
+  const token = getStoredToken();
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   const config: RequestInit = {
     method: customConfig.method || 'GET',
     headers: {
       ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
+      ...authHeaders,
       ...headers,
     },
     body: isJsonBody ? JSON.stringify(body) : (body as BodyInit | undefined),
@@ -55,6 +76,11 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
   const response = await fetch(url, config);
 
   if (!response.ok) {
+    if (response.status === 401) {
+      clearStoredSession();
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    }
+
     let errorPayload: any;
     try {
       errorPayload = await response.json();
