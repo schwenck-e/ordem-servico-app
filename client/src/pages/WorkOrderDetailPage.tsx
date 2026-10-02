@@ -9,6 +9,7 @@ import { WorkOrderTechnicianCard } from '@/components/work-orders/detail/WorkOrd
 import { WorkOrderDiagnosisCard } from '@/components/work-orders/detail/WorkOrderDiagnosisCard';
 import { WorkOrderItemsList } from '@/components/work-orders/detail/WorkOrderItemsList';
 import { WorkOrderTimeline } from '@/components/work-orders/detail/WorkOrderTimeline';
+import { AttachmentGallery } from '@/components/attachments/AttachmentGallery';
 import { WorkOrderPrintReceipt } from '@/components/work-orders/detail/WorkOrderPrintReceipt';
 import { WorkOrderStatusModal } from '@/components/work-orders/WorkOrderStatusModal';
 
@@ -94,6 +95,10 @@ export const WorkOrderDetailPage: React.FC = () => {
             <WorkOrderDiagnosisCard
               order={order}
               onEditDiagnosis={() => setIsStatusModalOpen(true)}
+            />
+            <AttachmentGallery
+              workOrderId={order.id}
+              attachments={order.attachments || []}
             />
             <WorkOrderItemsList order={order} />
           </div>

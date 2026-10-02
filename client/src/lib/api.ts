@@ -1,4 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+
+export function getFileUrl(pathOrUrl?: string | null): string {
+  if (!pathOrUrl) return '';
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://') || pathOrUrl.startsWith('data:')) {
+    return pathOrUrl;
+  }
+  return `${API_BASE_URL}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`;
+}
 
 export class ApiError extends Error {
   status: number;

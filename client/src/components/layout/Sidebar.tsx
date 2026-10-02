@@ -7,6 +7,7 @@ import {
   Wrench,
   Layers,
   ShieldCheck,
+  Building2,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const navigation: NavItem[] = [
   { name: 'Clientes', href: '/customers', icon: Users },
   { name: 'Técnicos', href: '/technicians', icon: Wrench },
   { name: 'Usuários', href: '/users', icon: ShieldCheck, adminOnly: true },
+  { name: 'Configurações', href: '/settings/company', icon: Building2, adminOnly: true },
 ];
 
 export const Sidebar: React.FC = () => {
