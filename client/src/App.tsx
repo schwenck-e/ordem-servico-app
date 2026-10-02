@@ -8,6 +8,7 @@ import { WorkOrderDetailPage } from '@/pages/WorkOrderDetailPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { TechniciansPage } from '@/pages/TechniciansPage';
 import { UsersPage } from '@/pages/UsersPage';
+import { CompanySettingsPage } from '@/pages/CompanySettingsPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ToastProvider } from '@/context/ToastContext';
@@ -42,6 +43,15 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <UsersPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/settings/company"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <CompanySettingsPage />
                   </ProtectedRoute>
                 }
               />

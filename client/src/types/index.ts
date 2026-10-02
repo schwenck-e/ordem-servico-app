@@ -157,11 +157,66 @@ export interface WorkOrderLog {
   createdAt: string;
 }
 
+// ─── Configurações da Empresa (ENG-24 / ENG-26) ────────────────────────────
+
+export interface Company {
+  id: string;
+  name: string;
+  tradeName: string;
+  cnpj: string;
+  ie: string | null;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  logoUrl: string | null;
+  warrantyTerms: string | null;
+  workOrderNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateCompanyInput {
+  name?: string;
+  tradeName?: string;
+  cnpj?: string;
+  ie?: string | null;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  logoUrl?: string | null;
+  warrantyTerms?: string | null;
+  workOrderNotes?: string | null;
+}
+
+// ─── Anexos da Ordem de Serviço (ENG-25 / ENG-26) ──────────────────────────
+
+export type AttachmentType = 'BEFORE' | 'AFTER' | 'DOCUMENT';
+
+export interface WorkOrderAttachment {
+  id: string;
+  workOrderId: string;
+  fileName: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  type: AttachmentType;
+  uploadedBy: string;
+  createdAt: string;
+}
+
 export interface WorkOrder extends Omit<WorkOrderSummary, 'customer' | 'technician' | 'items' | 'logs'> {
   customer: Customer;
   technician: Technician | null;
   items: WorkOrderItem[];
   logs: WorkOrderLog[];
+  attachments?: WorkOrderAttachment[];
 }
 
 export interface WorkOrderFilterParams {
