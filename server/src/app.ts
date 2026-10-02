@@ -12,7 +12,19 @@ import { technicianRoutes } from './modules/technicians/technician.routes';
 import { workOrderRoutes } from './modules/work-orders/work-order.routes';
 import { metricsRoutes } from './modules/metrics/metrics.routes';
 import { companyRoutes } from './modules/company/company.routes';
+import { attachmentRoutes } from './modules/attachments/attachment.routes';
+import path from 'path';
+import fs from 'fs';
+import fastifyStatic from '@fastify/static';
+import multipartPlugin from './plugins/multipart';
 import { env } from './config/env';
+
+// Criação do diretório de uploads caso não exista
+const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+const workOrdersUploadDir = path.resolve(uploadsRoot, 'work-orders');
+if (!fs.existsSync(workOrdersUploadDir)) {
+  fs.mkdirSync(workOrdersUploadDir, { recursive: true });
+}
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -66,6 +78,12 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(swaggerPlugin);
   await app.register(prismaPlugin);
   await app.register(authPlugin);
+  await app.register(multipartPlugin);
+  await app.register(fastifyStatic, {
+    root: uploadsRoot,
+    prefix: '/uploads/',
+    decorateReply: false
+  });
 
   // Registro de Rotas — Públicas
   await app.register(healthRoutes, { prefix: '/health' });
@@ -78,6 +96,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(customerRoutes, { prefix: '/customers' });
   await app.register(technicianRoutes, { prefix: '/technicians' });
   await app.register(workOrderRoutes, { prefix: '/work-orders' });
+  await app.register(attachmentRoutes, { prefix: '/work-orders' });
   await app.register(metricsRoutes, { prefix: '/metrics' });
   await app.register(companyRoutes, { prefix: '/company' });
 
