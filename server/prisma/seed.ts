@@ -13,6 +13,7 @@ async function main() {
   await prisma.technician.deleteMany();
   await prisma.customer.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.company.deleteMany();
 
   console.log('🧹 Registros anteriores removidos com sucesso.');
 
@@ -40,6 +41,27 @@ async function main() {
   });
 
   console.log('🔐 2 Usuários criados com sucesso (admin@empresa.com / operador@empresa.com).');
+
+  // 0.1 Empresa Padrão (ENG-24)
+  await prisma.company.create({
+    data: {
+      name: 'Ordem de Serviço Assistência Técnica Ltda',
+      tradeName: 'OS Assistência & Tecnologia',
+      cnpj: '11.222.333/0001-81',
+      ie: '123.456.789.110',
+      email: 'contato@osassistencia.com.br',
+      phone: '(11) 3344-5566',
+      address: 'Rua da Tecnologia, 500 - Bloco B - Santa Ifigênia',
+      city: 'São Paulo',
+      state: 'SP',
+      zipCode: '01209-000',
+      logoUrl: 'https://via.placeholder.com/150',
+      warrantyTerms: 'Garantia legal de 90 dias sobre peças substituídas e serviços executados nos termos do Art. 26 do CDC.',
+      workOrderNotes: 'Equipamentos não retirados em até 90 dias após notificação de conclusão estarão sujeitos a cobrança de armazenagem.',
+    }
+  });
+
+  console.log('🏢 Dados da empresa criados com sucesso.');
 
   // 1. Clientes
   const customerLawFirm = await prisma.customer.create({

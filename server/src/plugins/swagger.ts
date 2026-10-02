@@ -23,7 +23,8 @@ export default fp(async (app) => {
         { name: 'Customers', description: 'Gestão de clientes' },
         { name: 'Technicians', description: 'Gestão de técnicos' },
         { name: 'WorkOrders', description: 'Gestão e workflow de ordens de serviço' },
-        { name: 'Metrics', description: 'Indicadores operacionais e métricas analíticas' }
+        { name: 'Metrics', description: 'Indicadores operacionais e métricas analíticas' },
+        { name: 'Company', description: 'Configurações cadastrais e institucionais da empresa' }
       ],
       components: {
         securitySchemes: {
