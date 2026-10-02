@@ -66,6 +66,7 @@ model WorkOrder {
   technician Technician?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
   items      WorkOrderItem[]
   logs       WorkOrderLog[]
+  attachments WorkOrderAttachment[]
 
   @@index([customerId])
   @@index([technicianId])
@@ -136,5 +137,24 @@ model Company {
   updatedAt      DateTime @updatedAt
 
   @@map("company")
+}
+
+model WorkOrderAttachment {
+  id           String    @id @default(uuid())
+  workOrderId  String
+  fileName     String    // Nome sanitizado único gerado no disco (ex.: uuid.ext)
+  originalName String    // Nome original do arquivo enviado pelo cliente
+  mimeType     String    // image/jpeg, image/png, image/webp, application/pdf
+  size         Int       // Tamanho em bytes
+  url          String    // URL pública relativa (ex.: /uploads/work-orders/uuid.ext)
+  type         String    @default("DOCUMENT") // "BEFORE" | "AFTER" | "DOCUMENT"
+  uploadedBy   String    // Identificação do usuário autor do upload
+  createdAt    DateTime  @default(now())
+
+  workOrder    WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId])
+  @@index([type])
+  @@map("work_order_attachments")
 }
 

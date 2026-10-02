@@ -267,6 +267,9 @@ export async function getWorkOrderById(prisma: PrismaClient, id: string) {
       logs: {
         orderBy: { createdAt: 'asc' },
       },
+      attachments: {
+        orderBy: { createdAt: 'desc' },
+      },
     },
   });
 

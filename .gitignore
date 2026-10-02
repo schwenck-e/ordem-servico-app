@@ -42,3 +42,7 @@ pnpm-debug.log*
 
 # Humanlayer thoughts directory
 thoughts/
+
+# Uploaded files
+uploads/
+server/uploads/
