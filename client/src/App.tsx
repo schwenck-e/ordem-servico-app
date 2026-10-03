@@ -7,6 +7,8 @@ import { WorkOrderFormPage } from '@/pages/WorkOrderFormPage';
 import { WorkOrderDetailPage } from '@/pages/WorkOrderDetailPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { TechniciansPage } from '@/pages/TechniciansPage';
+import { ProductsPage } from '@/pages/ProductsPage';
+import { StockMovementsPage } from '@/pages/StockMovementsPage';
 import { UsersPage } from '@/pages/UsersPage';
 import { CompanySettingsPage } from '@/pages/CompanySettingsPage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -37,6 +39,8 @@ export const App: React.FC = () => {
               <Route path="/work-orders/:id/edit" element={<WorkOrderFormPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/technicians" element={<TechniciansPage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/stock/movements" element={<StockMovementsPage />} />
 
               <Route
                 path="/users"

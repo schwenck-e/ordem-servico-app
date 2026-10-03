@@ -139,6 +139,14 @@ export interface WorkOrderSummary {
 export interface WorkOrderItem {
   id: string;
   workOrderId: string;
+  productId?: string | null;
+  product?: {
+    id: string;
+    name: string;
+    sku: string;
+    unit: string;
+    currentStock: number;
+  } | null;
   type: WorkOrderItemType;
   description: string;
   quantity: number;
@@ -240,6 +248,7 @@ export interface UpdateWorkOrderStatusInput {
 }
 
 export interface CreateWorkOrderItemInput {
+  productId?: string | null;
   type: WorkOrderItemType;
   description: string;
   quantity: number;
@@ -380,3 +389,94 @@ export interface MetricsByTechnicianResponse {
     endDate: string | null;
   };
 }
+
+// ─── Controle de Estoque e Produtos (ENG-27 / ENG-28) ──────────────────────
+
+export type StockMovementType = 'IN' | 'OUT' | 'ADJUSTMENT';
+
+export interface Product {
+  id: string;
+  sku: string;
+  name: string;
+  description: string | null;
+  unit: string;
+  costPrice: number;
+  salePrice: number;
+  currentStock: number;
+  minStock: number;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    movements: number;
+    orderItems: number;
+  };
+}
+
+export interface StockMovement {
+  id: string;
+  productId: string;
+  product?: {
+    id: string;
+    sku: string;
+    name: string;
+    unit: string;
+  };
+  workOrderId?: string | null;
+  workOrder?: {
+    id: string;
+    orderNumber: string;
+  } | null;
+  type: StockMovementType;
+  quantity: number;
+  unitPrice?: number | null;
+  reason: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface CreateProductInput {
+  sku: string;
+  name: string;
+  description?: string | null;
+  unit?: string;
+  costPrice?: number;
+  salePrice?: number;
+  initialStock?: number;
+  minStock?: number;
+}
+
+export interface UpdateProductInput {
+  sku?: string;
+  name?: string;
+  description?: string | null;
+  unit?: string;
+  costPrice?: number;
+  salePrice?: number;
+  minStock?: number;
+}
+
+export interface CreateStockMovementInput {
+  productId: string;
+  type: StockMovementType;
+  quantity: number;
+  unitPrice?: number;
+  reason: string;
+}
+
+export interface ListStockMovementsParams {
+  page?: number;
+  limit?: number;
+  productId?: string;
+  type?: StockMovementType;
+  workOrderId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ListProductsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  lowStock?: boolean;
+}
+

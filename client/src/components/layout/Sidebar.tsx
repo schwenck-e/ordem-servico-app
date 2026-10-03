@@ -8,6 +8,7 @@ import {
   Layers,
   ShieldCheck,
   Building2,
+  Package,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const navigation: NavItem[] = [
   { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
   { name: 'Clientes', href: '/customers', icon: Users },
   { name: 'Técnicos', href: '/technicians', icon: Wrench },
+  { name: 'Estoque', href: '/products', icon: Package },
   { name: 'Usuários', href: '/users', icon: ShieldCheck, adminOnly: true },
   { name: 'Configurações', href: '/settings/company', icon: Building2, adminOnly: true },
 ];
