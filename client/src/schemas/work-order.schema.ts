@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 export const workOrderItemFormSchema = z.object({
+  productId: z
+    .string()
+    .uuid('Identificador do produto inválido')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
   type: z.enum(['SERVICE', 'PART'], {
     message: 'Selecione o tipo do item',
   }),

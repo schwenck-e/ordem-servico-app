@@ -1,6 +1,14 @@
-import { useFieldArray, Control, UseFormRegister, FieldErrors, UseFormWatch } from 'react-hook-form';
+import {
+  useFieldArray,
+  Control,
+  UseFormRegister,
+  FieldErrors,
+  UseFormWatch,
+  UseFormSetValue,
+} from 'react-hook-form';
 import { Plus, Trash2, Layers, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
+import { ProductItemSelector } from './ProductItemSelector';
 import type { WorkOrderFormData } from '@/schemas/work-order.schema';
 
 interface WorkOrderItemsTableProps {
@@ -8,6 +16,7 @@ interface WorkOrderItemsTableProps {
   register: UseFormRegister<WorkOrderFormData>;
   errors: FieldErrors<WorkOrderFormData>;
   watch: UseFormWatch<WorkOrderFormData>;
+  setValue: UseFormSetValue<WorkOrderFormData>;
 }
 
 export function WorkOrderItemsTable({
@@ -15,6 +24,7 @@ export function WorkOrderItemsTable({
   register,
   errors,
   watch,
+  setValue,
 }: WorkOrderItemsTableProps) {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -25,6 +35,7 @@ export function WorkOrderItemsTable({
 
   const handleAddItem = () => {
     append({
+      productId: null,
       type: 'SERVICE',
       description: '',
       quantity: 1,
@@ -61,7 +72,7 @@ export function WorkOrderItemsTable({
           <thead>
             <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <th className="py-2.5 pl-2 pr-3 w-32">Tipo</th>
-              <th className="py-2.5 px-3 min-w-[200px]">Descrição</th>
+              <th className="py-2.5 px-3 min-w-[240px]">Descrição / Peça</th>
               <th className="py-2.5 px-3 w-24 text-center">Qtd</th>
               <th className="py-2.5 px-3 w-36 text-right">Valor Unit. (R$)</th>
               <th className="py-2.5 px-3 w-32 text-right">Subtotal</th>
@@ -70,9 +81,10 @@ export function WorkOrderItemsTable({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {fields.map((field, index) => {
-              const itemType = watchedItems[index]?.type || 'SERVICE';
-              const qty = Number(watchedItems[index]?.quantity) || 0;
-              const price = Number(watchedItems[index]?.unitPrice) || 0;
+              const currentItem = watchedItems[index];
+              const itemType = currentItem?.type || 'SERVICE';
+              const qty = Number(currentItem?.quantity) || 0;
+              const price = Number(currentItem?.unitPrice) || 0;
               const subtotal = Math.max(0, qty * price);
 
               const itemError = errors.items?.[index];
@@ -83,6 +95,13 @@ export function WorkOrderItemsTable({
                   <td className="py-2.5 pl-2 pr-3 align-top">
                     <select
                       {...register(`items.${index}.type`)}
+                      onChange={(e) => {
+                        const newType = e.target.value as 'SERVICE' | 'PART';
+                        setValue(`items.${index}.type`, newType, { shouldValidate: true, shouldDirty: true });
+                        if (newType === 'SERVICE') {
+                          setValue(`items.${index}.productId`, null, { shouldValidate: true, shouldDirty: true });
+                        }
+                      }}
                       className="block w-full rounded-md border border-slate-300 bg-white py-1.5 px-2 text-xs font-medium text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
                       <option value="SERVICE">Serviço</option>
@@ -93,24 +112,52 @@ export function WorkOrderItemsTable({
                     )}
                   </td>
 
-                  {/* Descrição */}
+                  {/* Descrição / Seletor de Peça */}
                   <td className="py-2.5 px-3 align-top">
-                    <input
-                      type="text"
-                      {...register(`items.${index}.description`)}
-                      placeholder={
-                        itemType === 'SERVICE'
-                          ? 'Ex: Troca de tela, Limpeza interna...'
-                          : 'Ex: Tela OLED iPhone 13, SSD 512GB NVMe...'
-                      }
-                      className={`block w-full rounded-md border py-1.5 px-2.5 text-xs shadow-sm transition placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
-                        itemError?.description
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                          : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500'
-                      }`}
-                    />
-                    {itemError?.description && (
-                      <p className="mt-0.5 text-[11px] text-red-600">{itemError.description.message}</p>
+                    {itemType === 'PART' ? (
+                      <ProductItemSelector
+                        productId={currentItem?.productId}
+                        currentDescription={currentItem?.description || ''}
+                        quantity={qty}
+                        onSelectProduct={(product) => {
+                          setValue(`items.${index}.productId`, product.id, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                          setValue(`items.${index}.description`, product.name, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                          setValue(`items.${index}.unitPrice`, product.salePrice, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }}
+                        onClearProduct={() => {
+                          setValue(`items.${index}.productId`, null, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }}
+                        registerDescriptionProps={register(`items.${index}.description`)}
+                        error={itemError?.description?.message}
+                      />
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          {...register(`items.${index}.description`)}
+                          placeholder="Ex: Troca de tela, Limpeza interna..."
+                          className={`block w-full rounded-md border py-1.5 px-2.5 text-xs shadow-sm transition placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
+                            itemError?.description
+                              ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                              : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500'
+                          }`}
+                        />
+                        {itemError?.description && (
+                          <p className="mt-0.5 text-[11px] text-red-600">{itemError.description.message}</p>
+                        )}
+                      </>
                     )}
                   </td>
 

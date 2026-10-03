@@ -59,6 +59,7 @@ export function WorkOrderFormPage() {
       initialComment: '',
       items: [
         {
+          productId: null,
           type: 'SERVICE',
           description: '',
           quantity: 1,
@@ -86,6 +87,7 @@ export function WorkOrderFormPage() {
         items:
           existingWorkOrder.items && existingWorkOrder.items.length > 0
             ? existingWorkOrder.items.map((item) => ({
+                productId: item.productId || null,
                 type: item.type,
                 description: item.description,
                 quantity: item.quantity,
@@ -93,6 +95,7 @@ export function WorkOrderFormPage() {
               }))
             : [
                 {
+                  productId: null,
                   type: 'SERVICE',
                   description: '',
                   quantity: 1,
@@ -109,6 +112,10 @@ export function WorkOrderFormPage() {
   const onSubmit = async (data: WorkOrderFormData) => {
     try {
       const sanitizedItems = data.items.map((item) => ({
+        productId:
+          item.productId && item.productId.trim() !== ''
+            ? item.productId
+            : null,
         type: item.type,
         description: item.description.trim(),
         quantity: Number(item.quantity),
@@ -299,6 +306,7 @@ export function WorkOrderFormPage() {
               register={register}
               errors={errors}
               watch={watch}
+              setValue={setValue}
             />
           </div>
 
