@@ -67,6 +67,7 @@ model WorkOrder {
   items      WorkOrderItem[]
   logs       WorkOrderLog[]
   attachments WorkOrderAttachment[]
+  stockMovements StockMovement[]
 
   @@index([customerId])
   @@index([technicianId])
@@ -76,18 +77,61 @@ model WorkOrder {
 }
 
 model WorkOrderItem {
-  id          String @id @default(uuid())
+  id          String   @id @default(uuid())
   workOrderId String
-  type        String // "SERVICE" | "PART"
+  productId   String?  // Chave estrangeira opcional para controle de estoque
+  type        String   // "SERVICE" | "PART"
   description String
-  quantity    Int    @default(1)
-  unitPrice   Float  @default(0.0)
-  subtotal    Float  @default(0.0)
+  quantity    Int      @default(1)
+  unitPrice   Float    @default(0.0)
+  subtotal    Float    @default(0.0)
 
-  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  product     Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([workOrderId])
+  @@index([productId])
   @@map("work_order_items")
+}
+
+model Product {
+  id           String          @id @default(uuid())
+  sku          String          @unique
+  name         String
+  description  String?
+  unit         String          @default("UN")
+  costPrice    Float           @default(0.0)
+  salePrice    Float           @default(0.0)
+  currentStock Int             @default(0)
+  minStock     Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  movements    StockMovement[]
+  orderItems   WorkOrderItem[]
+
+  @@map("products")
+}
+
+model StockMovement {
+  id          String     @id @default(uuid())
+  productId   String
+  workOrderId String?
+  type        String     // "IN" | "OUT" | "ADJUSTMENT"
+  quantity    Int
+  unitPrice   Float?     // Valor de custo ou referência na movimentação
+  reason      String     // Motivo da movimentação (ex.: Fornecedor, OS-2026-0001, Perda, Ajuste)
+  createdBy   String     @default("SYSTEM")
+  createdAt   DateTime   @default(now())
+
+  product     Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([workOrderId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("stock_movements")
 }
 
 model WorkOrderLog {

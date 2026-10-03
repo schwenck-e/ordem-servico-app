@@ -25,7 +25,9 @@ export default fp(async (app) => {
         { name: 'WorkOrders', description: 'Gestão e workflow de ordens de serviço' },
         { name: 'Attachments', description: 'Upload e gestão de fotos e anexos da Ordem de Serviço' },
         { name: 'Metrics', description: 'Indicadores operacionais e métricas analíticas' },
-        { name: 'Company', description: 'Configurações cadastrais e institucionais da empresa' }
+        { name: 'Company', description: 'Configurações cadastrais e institucionais da empresa' },
+        { name: 'Products', description: 'Gestão de catálogo de produtos e controle de peças sobressalentes' },
+        { name: 'Stock', description: 'Registro e histórico auditável de movimentações de estoque' }
       ],
       components: {
         securitySchemes: {

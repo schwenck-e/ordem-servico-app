@@ -13,6 +13,8 @@ import { workOrderRoutes } from './modules/work-orders/work-order.routes';
 import { metricsRoutes } from './modules/metrics/metrics.routes';
 import { companyRoutes } from './modules/company/company.routes';
 import { attachmentRoutes } from './modules/attachments/attachment.routes';
+import { productRoutes } from './modules/products/product.routes';
+import { stockRoutes } from './modules/stock/stock.routes';
 import path from 'path';
 import fs from 'fs';
 import fastifyStatic from '@fastify/static';
@@ -99,6 +101,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(attachmentRoutes, { prefix: '/work-orders' });
   await app.register(metricsRoutes, { prefix: '/metrics' });
   await app.register(companyRoutes, { prefix: '/company' });
+  await app.register(productRoutes, { prefix: '/products' });
+  await app.register(stockRoutes, { prefix: '/stock' });
 
   return app;
 }

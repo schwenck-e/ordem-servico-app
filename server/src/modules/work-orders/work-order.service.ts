@@ -122,6 +122,35 @@ export async function createWorkOrder(
   return prisma.$transaction(async (tx) => {
     const orderNumber = await generateOrderNumber(tx);
 
+    // Validação e baixa prévia de estoque para peças vinculadas ao catálogo
+    for (const item of calculatedItems) {
+      if (item.type === 'PART' && item.productId) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+        });
+
+        if (!product) {
+          throw createHttpError(404, `Produto ${item.productId} não encontrado.`);
+        }
+
+        if (product.currentStock < item.quantity) {
+          throw createHttpError(
+            400,
+            `Estoque insuficiente para o produto "${product.name}" (SKU: ${product.sku}). Saldo disponível: ${product.currentStock}, Solicitado: ${item.quantity}.`
+          );
+        }
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            currentStock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+    }
+
     const workOrder = await tx.workOrder.create({
       data: {
         orderNumber,
@@ -139,6 +168,7 @@ export async function createWorkOrder(
         scheduledDate: data.scheduledDate ?? null,
         items: {
           create: calculatedItems.map((item) => ({
+            productId: item.productId ?? null,
             type: item.type,
             description: item.description,
             quantity: item.quantity,
@@ -164,6 +194,23 @@ export async function createWorkOrder(
         },
       },
     });
+
+    // Registrar movimentações de saída para peças baixadas
+    for (const item of calculatedItems) {
+      if (item.type === 'PART' && item.productId) {
+        await tx.stockMovement.create({
+          data: {
+            productId: item.productId,
+            workOrderId: workOrder.id,
+            type: 'OUT',
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            reason: `Baixa automática por aplicação na OS ${orderNumber}`,
+            createdBy: data.technicianId || 'SYSTEM',
+          },
+        });
+      }
+    }
 
     return workOrder;
   });
@@ -326,15 +373,75 @@ export async function updateWorkOrder(
     const totals = calculateOrderTotals(data.items, effectiveDiscount);
 
     await prisma.$transaction(async (tx) => {
-      // Deletar itens antigos
+      // 1. Estornar peças antigas associadas ao catálogo
+      for (const oldItem of current.items) {
+        if (oldItem.type === 'PART' && oldItem.productId) {
+          await tx.product.update({
+            where: { id: oldItem.productId },
+            data: { currentStock: { increment: oldItem.quantity } },
+          });
+
+          await tx.stockMovement.create({
+            data: {
+              productId: oldItem.productId,
+              workOrderId: id,
+              type: 'IN',
+              quantity: oldItem.quantity,
+              unitPrice: oldItem.unitPrice,
+              reason: `Estorno por alteração nos itens da OS ${current.orderNumber}`,
+              createdBy: 'SYSTEM',
+            },
+          });
+        }
+      }
+
+      // 2. Deletar itens antigos
       await tx.workOrderItem.deleteMany({
         where: { workOrderId: id },
       });
 
-      // Criar novos itens
+      // 3. Validar e debitar estoque para novos itens de peças
+      for (const item of totals.items) {
+        if (item.type === 'PART' && item.productId) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+          });
+
+          if (!product) {
+            throw createHttpError(404, `Produto ${item.productId} não encontrado.`);
+          }
+
+          if (product.currentStock < item.quantity) {
+            throw createHttpError(
+              400,
+              `Estoque insuficiente para o produto "${product.name}" (SKU: ${product.sku}). Saldo disponível: ${product.currentStock}, Solicitado: ${item.quantity}.`
+            );
+          }
+
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { currentStock: { decrement: item.quantity } },
+          });
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              workOrderId: id,
+              type: 'OUT',
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              reason: `Baixa automática por alteração nos itens da OS ${current.orderNumber}`,
+              createdBy: data.technicianId || 'SYSTEM',
+            },
+          });
+        }
+      }
+
+      // 4. Criar novos itens com productId
       await tx.workOrderItem.createMany({
         data: totals.items.map((item) => ({
           workOrderId: id,
+          productId: item.productId ?? null,
           type: item.type,
           description: item.description,
           quantity: item.quantity,
@@ -343,7 +450,7 @@ export async function updateWorkOrder(
         })),
       });
 
-      // Atualizar dados cadastrais e totais
+      // 5. Atualizar dados cadastrais e totais
       await tx.workOrder.update({
         where: { id },
         data: {
@@ -369,6 +476,7 @@ export async function updateWorkOrder(
   // 5. Cenário B: Itens NÃO fornecidos, mas desconto foi alterado
   if (data.discount !== undefined) {
     const existingItemsInput: CreateWorkOrderItemInput[] = current.items.map((i) => ({
+      productId: i.productId,
       type: i.type as 'SERVICE' | 'PART',
       description: i.description,
       quantity: i.quantity,

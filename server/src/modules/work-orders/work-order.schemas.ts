@@ -26,6 +26,11 @@ export const workOrderItemTypeEnum = z.enum([
 // ─── Itens da Ordem de Serviço ──────────────────────────────────────────────
 
 export const createWorkOrderItemSchema = z.object({
+  productId: z
+    .string()
+    .uuid('Identificador do produto inválido (UUID v4 esperado)')
+    .optional()
+    .nullable(),
   type: workOrderItemTypeEnum,
   description: z
     .string()
@@ -259,6 +264,7 @@ export const createWorkOrderSwaggerSchema = {
           type: 'object' as const,
           required: ['type', 'description', 'quantity', 'unitPrice'],
           properties: {
+            productId: { type: 'string' as const, format: 'uuid', nullable: true },
             type: { type: 'string' as const, enum: ['SERVICE', 'PART'] },
             description: { type: 'string' as const },
             quantity: { type: 'integer' as const, minimum: 1, default: 1 },
