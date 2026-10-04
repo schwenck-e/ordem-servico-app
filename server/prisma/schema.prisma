@@ -24,6 +24,7 @@ model Customer {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   workOrders WorkOrder[]
+  quotes     Quote[]
 
   @@map("customers")
 }
@@ -38,6 +39,7 @@ model Technician {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   workOrders WorkOrder[]
+  quotes     Quote[]
 
   @@map("technicians")
 }
@@ -64,6 +66,7 @@ model WorkOrder {
 
   customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
   technician Technician?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  quote      Quote?
   items      WorkOrderItem[]
   logs       WorkOrderLog[]
   attachments WorkOrderAttachment[]
@@ -109,6 +112,7 @@ model Product {
 
   movements    StockMovement[]
   orderItems   WorkOrderItem[]
+  quoteItems   QuoteItem[]
 
   @@map("products")
 }
@@ -201,4 +205,55 @@ model WorkOrderAttachment {
   @@index([type])
   @@map("work_order_attachments")
 }
+
+model Quote {
+  id                 String    @id @default(uuid())
+  quoteNumber        String    @unique
+  customerId         String
+  technicianId       String?
+  equipment          String
+  serialNumber       String?
+  reportedDefect     String
+  technicalDiagnosis String?
+  status             String    @default("DRAFT") // "DRAFT" | "SENT" | "APPROVED" | "REJECTED" | "EXPIRED"
+  notes              String?
+  totalServices      Float     @default(0.0)
+  totalParts         Float     @default(0.0)
+  discount           Float     @default(0.0)
+  totalAmount        Float     @default(0.0)
+  validUntil         DateTime?
+  workOrderId        String?   @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  technician Technician? @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  workOrder  WorkOrder?  @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+  items      QuoteItem[]
+
+  @@index([customerId])
+  @@index([technicianId])
+  @@index([status])
+  @@index([validUntil])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          String   @id @default(uuid())
+  quoteId     String
+  productId   String?  // Peça opcional do catálogo de estoque
+  type        String   // "SERVICE" | "PART"
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float    @default(0.0)
+  subtotal    Float    @default(0.0)
+
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([quoteId])
+  @@index([productId])
+  @@map("quote_items")
+}
+
 
