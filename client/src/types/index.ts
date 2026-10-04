@@ -480,3 +480,119 @@ export interface ListProductsParams {
   lowStock?: boolean;
 }
 
+// ─── Orçamentos e Propostas Comerciais (ENG-29 / ENG-30) ───────────────────
+
+export type QuoteStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+
+export type QuoteItemType = 'SERVICE' | 'PART';
+
+export interface QuoteItem {
+  id: string;
+  quoteId: string;
+  productId?: string | null;
+  product?: {
+    id: string;
+    sku: string;
+    name: string;
+    unit: string;
+    currentStock: number;
+  } | null;
+  type: QuoteItemType;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  createdAt?: string;
+}
+
+export interface QuoteSummary {
+  id: string;
+  quoteNumber: string;
+  customerId: string;
+  technicianId: string | null;
+  equipment: string;
+  serialNumber: string | null;
+  reportedDefect: string;
+  technicalDiagnosis: string | null;
+  status: QuoteStatus;
+  notes: string | null;
+  totalServices: number;
+  totalParts: number;
+  discount: number;
+  totalAmount: number;
+  validUntil: string | null;
+  workOrderId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer: {
+    id: string;
+    name: string;
+    document: string;
+    email: string | null;
+    phone: string;
+  };
+  technician: {
+    id: string;
+    name: string;
+    email: string;
+    specialty: string | null;
+  } | null;
+  _count?: {
+    items: number;
+  };
+}
+
+export interface Quote extends Omit<QuoteSummary, '_count'> {
+  customer: Customer;
+  technician: Technician | null;
+  items: QuoteItem[];
+  workOrder?: {
+    id: string;
+    orderNumber: string;
+    status: WorkOrderStatus;
+  } | null;
+}
+
+export interface CreateQuoteItemInput {
+  productId?: string | null;
+  type: QuoteItemType;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface CreateQuoteInput {
+  customerId: string;
+  technicianId?: string | null;
+  equipment: string;
+  serialNumber?: string | null;
+  reportedDefect: string;
+  technicalDiagnosis?: string | null;
+  notes?: string | null;
+  validUntil?: string | null;
+  discount?: number;
+  items: CreateQuoteItemInput[];
+}
+
+export type UpdateQuoteInput = Partial<CreateQuoteInput>;
+
+export interface UpdateQuoteStatusInput {
+  status: QuoteStatus;
+  notes?: string;
+}
+
+export interface QuoteFilterParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: QuoteStatus | 'all';
+  customerId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ConvertQuoteResponse {
+  workOrder: WorkOrder;
+  quote: Quote;
+}
+
