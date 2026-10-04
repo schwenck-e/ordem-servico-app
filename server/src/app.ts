@@ -16,6 +16,7 @@ import { attachmentRoutes } from './modules/attachments/attachment.routes';
 import { productRoutes } from './modules/products/product.routes';
 import { stockRoutes } from './modules/stock/stock.routes';
 import { quoteRoutes } from './modules/quotes/quote.routes';
+import { invoiceRoutes } from './modules/invoices/invoice.routes';
 import path from 'path';
 import fs from 'fs';
 import fastifyStatic from '@fastify/static';
@@ -105,6 +106,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(productRoutes, { prefix: '/products' });
   await app.register(stockRoutes, { prefix: '/stock' });
   await app.register(quoteRoutes, { prefix: '/quotes' });
+  await app.register(invoiceRoutes, { prefix: '/invoices' });
 
   return app;
 }
