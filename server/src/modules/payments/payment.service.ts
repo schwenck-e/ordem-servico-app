@@ -54,6 +54,20 @@ export async function createPayment(
       },
     });
 
+    // Integração Contábil Automática (ENG-32):
+    await tx.financialTransaction.create({
+      data: {
+        type: 'REVENUE',
+        category: 'SERVICE_REVENUE',
+        description: `Recebimento da fatura ${invoice.invoiceNumber}`,
+        amount: paymentAmount,
+        dueDate: invoice.dueDate,
+        paymentDate: data.paidAt || new Date(),
+        status: 'PAID',
+        invoiceId: invoice.id,
+      },
+    });
+
     const updatedInvoice = await tx.invoice.update({
       where: { id: invoiceId },
       data: {

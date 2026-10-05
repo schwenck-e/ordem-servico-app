@@ -279,6 +279,7 @@ model Invoice {
   workOrder     WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
   quote         Quote?     @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   payments      Payment[]
+  transactions  FinancialTransaction[]
 
   @@index([customerId])
   @@index([workOrderId])
@@ -306,5 +307,30 @@ model Payment {
   @@index([paidAt])
   @@map("payments")
 }
+
+model FinancialTransaction {
+  id          String    @id @default(uuid())
+  type        String    // "REVENUE" | "EXPENSE"
+  category    String    // "FIXED_EXPENSE" | "VARIABLE_EXPENSE" | "PARTS_PURCHASE" | "SERVICE_REVENUE" | "OTHER"
+  description String
+  amount      Float     @default(0.0)
+  dueDate     DateTime
+  paymentDate DateTime?
+  status      String    @default("PENDING") // "PENDING" | "PAID" | "CANCELED"
+  invoiceId   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invoice     Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([category])
+  @@index([dueDate])
+  @@index([paymentDate])
+  @@index([invoiceId])
+  @@map("financial_transactions")
+}
+
 
 
