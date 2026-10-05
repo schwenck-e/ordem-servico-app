@@ -12,6 +12,9 @@ import { StockMovementsPage } from '@/pages/StockMovementsPage';
 import { QuotesPage } from '@/pages/QuotesPage';
 import { QuoteFormPage } from '@/pages/QuoteFormPage';
 import { QuoteDetailPage } from '@/pages/QuoteDetailPage';
+import { InvoicesPage } from '@/pages/InvoicesPage';
+import { InvoiceDetailPage } from '@/pages/InvoiceDetailPage';
+import { FinancialPage } from '@/pages/FinancialPage';
 import { UsersPage } from '@/pages/UsersPage';
 import { CompanySettingsPage } from '@/pages/CompanySettingsPage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -44,6 +47,16 @@ export const App: React.FC = () => {
               <Route path="/quotes/new" element={<QuoteFormPage />} />
               <Route path="/quotes/:id" element={<QuoteDetailPage />} />
               <Route path="/quotes/:id/edit" element={<QuoteFormPage />} />
+              <Route path="/invoices" element={<InvoicesPage />} />
+              <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+              <Route
+                path="/financial"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <FinancialPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/technicians" element={<TechniciansPage />} />
               <Route path="/products" element={<ProductsPage />} />

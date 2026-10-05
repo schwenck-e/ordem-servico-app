@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   Layers,
   Package,
+  Receipt,
 } from 'lucide-react';
 import { useQuote } from '@/hooks/useQuotes';
 import { QuoteStatusBadge } from '@/components/quotes/QuoteStatusBadge';
@@ -191,6 +192,18 @@ export const QuoteDetailPage: React.FC = () => {
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Converter em Ordem de Serviço</span>
               </button>
+            )}
+
+            {/* Atalho para Faturas */}
+            {(quote.status === 'APPROVED' || isConverted) && (
+              <Link
+                to={`/invoices?search=${quote.quoteNumber}`}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors shadow-sm"
+                title="Consultar fatura vinculada"
+              >
+                <Receipt className="w-4 h-4 text-emerald-600" />
+                <span>Ver Fatura</span>
+              </Link>
             )}
           </div>
         </div>
