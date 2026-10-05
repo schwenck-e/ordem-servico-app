@@ -596,3 +596,179 @@ export interface ConvertQuoteResponse {
   quote: Quote;
 }
 
+// ─── Faturas e Pagamentos (ENG-31 / ENG-33) ─────────────────────────────────
+
+export type InvoiceStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID' | 'CANCELED';
+
+export type PaymentMethod =
+  | 'PIX'
+  | 'CREDIT_CARD'
+  | 'DEBIT_CARD'
+  | 'CASH'
+  | 'BANK_SLIP';
+
+export interface InvoicePayment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  paidAt: string;
+  receivedBy: string;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+export interface InvoiceSummary {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  workOrderId?: string | null;
+  quoteId?: string | null;
+  amount: number;
+  discount: number;
+  netAmount: number;
+  paidAmount: number;
+  status: InvoiceStatus;
+  dueDate: string;
+  createdAt: string;
+  customer: {
+    id: string;
+    name: string;
+    email?: string | null;
+    phone: string;
+  };
+  workOrder?: {
+    id: string;
+    orderNumber: string;
+    status: string;
+  } | null;
+  payments: Array<{
+    id: string;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    paidAt: string;
+  }>;
+}
+
+export interface Invoice extends Omit<InvoiceSummary, 'payments'> {
+  notes?: string | null;
+  remainingBalance: number;
+  customer: Customer;
+  workOrder?: (WorkOrder & { technician?: Technician | null }) | null;
+  quote?: Quote | null;
+  payments: InvoicePayment[];
+}
+
+export interface CreateInvoiceInput {
+  workOrderId?: string | null;
+  quoteId?: string | null;
+  customerId?: string;
+  amount?: number;
+  discount?: number;
+  dueDate?: string;
+  notes?: string | null;
+}
+
+export interface CreatePaymentInput {
+  amount: number;
+  paymentMethod: PaymentMethod;
+  paidAt?: string;
+  notes?: string | null;
+}
+
+export interface CancelInvoiceInput {
+  reason?: string;
+}
+
+export interface InvoiceFilterParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: InvoiceStatus | 'all';
+  customerId?: string;
+  workOrderId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+// ─── Gestão Financeira e Fluxo de Caixa (ENG-32 / ENG-33) ───────────────────
+
+export type FinancialTransactionType = 'REVENUE' | 'EXPENSE';
+export type FinancialTransactionStatus = 'PENDING' | 'PAID' | 'CANCELED';
+export type FinancialTransactionCategory =
+  | 'FIXED_EXPENSE'
+  | 'VARIABLE_EXPENSE'
+  | 'PARTS_PURCHASE'
+  | 'SERVICE_REVENUE'
+  | 'OTHER';
+
+export interface FinancialTransaction {
+  id: string;
+  type: FinancialTransactionType;
+  category: FinancialTransactionCategory;
+  description: string;
+  amount: number;
+  dueDate: string;
+  paymentDate?: string | null;
+  status: FinancialTransactionStatus;
+  invoiceId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  invoice?: {
+    id: string;
+    invoiceNumber: string;
+    status: InvoiceStatus;
+    amount?: number;
+    paidAmount?: number;
+  } | null;
+}
+
+export interface CreateFinancialTransactionInput {
+  type: FinancialTransactionType;
+  category: FinancialTransactionCategory;
+  description: string;
+  amount: number;
+  dueDate: string;
+  paymentDate?: string | null;
+  status?: FinancialTransactionStatus;
+  invoiceId?: string | null;
+}
+
+export interface PayFinancialTransactionInput {
+  paymentDate?: string;
+}
+
+export interface FinancialFilterParams {
+  page?: number;
+  limit?: number;
+  type?: FinancialTransactionType | 'all';
+  status?: FinancialTransactionStatus | 'all';
+  category?: FinancialTransactionCategory | 'all';
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
+export interface CashflowMonthlyItem {
+  month: string;
+  revenue: number;
+  expense: number;
+  netBalance: number;
+}
+
+export interface CashflowPeriod {
+  startDate: string;
+  endDate: string;
+  totalToPay: number;
+  totalToReceive: number;
+  paidRevenue: number;
+  paidExpense: number;
+  periodBalance: number;
+}
+
+export interface CashflowResponse {
+  currentBalance: number;
+  period: CashflowPeriod;
+  monthly: CashflowMonthlyItem[];
+}
+

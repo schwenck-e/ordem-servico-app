@@ -9,6 +9,7 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
+  Receipt,
 } from 'lucide-react';
 import { StatusBadge, PriorityBadge } from '@/components/common/Badge';
 import { formatDate } from '@/lib/formatters';
@@ -99,6 +100,17 @@ export const WorkOrderHeader: React.FC<WorkOrderHeaderProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {order.status === 'COMPLETED' && (
+            <Link
+              to={`/invoices?search=${order.orderNumber}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors shadow-sm"
+              title="Visualizar ou emitir fatura desta ordem de serviço"
+            >
+              <Receipt className="w-4 h-4 text-emerald-600" />
+              <span>Ver Fatura</span>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={onPrint}

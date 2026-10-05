@@ -10,6 +10,8 @@ import {
   Building2,
   Package,
   FileText,
+  Receipt,
+  DollarSign,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Ordens de Serviço', href: '/work-orders', icon: ClipboardList },
   { name: 'Orçamentos', href: '/quotes', icon: FileText },
+  { name: 'Faturas', href: '/invoices', icon: Receipt },
+  { name: 'Financeiro', href: '/financial', icon: DollarSign, adminOnly: true },
   { name: 'Clientes', href: '/customers', icon: Users },
   { name: 'Técnicos', href: '/technicians', icon: Wrench },
   { name: 'Estoque', href: '/products', icon: Package },
