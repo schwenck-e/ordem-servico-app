@@ -6,6 +6,7 @@ export const healthRoutes: FastifyPluginAsync = async (app) => {
       tags: ['Health'],
       summary: 'Verificação de integridade da API e banco de dados',
       description: 'Retorna 200 OK com timestamp e status da conectividade SQLite.',
+      security: [],
       response: {
         200: {
           type: 'object',

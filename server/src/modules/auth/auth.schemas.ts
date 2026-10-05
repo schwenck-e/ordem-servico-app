@@ -19,6 +19,7 @@ export const registerSchema = z.object({
 export const loginSwaggerSchema = {
   tags: ['Auth'],
   summary: 'Autenticar usuário e obter token JWT',
+  security: [],
   body: {
     type: 'object',
     required: ['email', 'password'],
