@@ -27,7 +27,10 @@ export default fp(async (app) => {
         { name: 'Metrics', description: 'Indicadores operacionais e métricas analíticas' },
         { name: 'Company', description: 'Configurações cadastrais e institucionais da empresa' },
         { name: 'Products', description: 'Gestão de catálogo de produtos e controle de peças sobressalentes' },
-        { name: 'Stock', description: 'Registro e histórico auditável de movimentações de estoque' }
+        { name: 'Stock', description: 'Registro e histórico auditável de movimentações de estoque' },
+        { name: 'Quotes', description: 'Gestão comercial, orçamentos e ciclo de aprovação' },
+        { name: 'Invoices', description: 'Faturamento de ordens de serviço e controle de pagamentos' },
+        { name: 'Financial', description: 'Gestão contábil, contas a pagar/receber e fluxo de caixa' }
       ],
       components: {
         securitySchemes: {
