@@ -25,6 +25,7 @@ model Customer {
   updatedAt  DateTime    @updatedAt
   workOrders WorkOrder[]
   quotes     Quote[]
+  invoices   Invoice[]
 
   @@map("customers")
 }
@@ -71,6 +72,7 @@ model WorkOrder {
   logs       WorkOrderLog[]
   attachments WorkOrderAttachment[]
   stockMovements StockMovement[]
+  invoices   Invoice[]
 
   @@index([customerId])
   @@index([technicianId])
@@ -230,6 +232,7 @@ model Quote {
   technician Technician? @relation(fields: [technicianId], references: [id], onDelete: SetNull)
   workOrder  WorkOrder?  @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
   items      QuoteItem[]
+  invoices   Invoice[]
 
   @@index([customerId])
   @@index([technicianId])
@@ -254,6 +257,54 @@ model QuoteItem {
   @@index([quoteId])
   @@index([productId])
   @@map("quote_items")
+}
+
+model Invoice {
+  id            String    @id @default(uuid())
+  invoiceNumber String    @unique
+  customerId    String
+  workOrderId   String?
+  quoteId       String?
+  amount        Float     @default(0.0)
+  discount      Float     @default(0.0)
+  netAmount     Float     @default(0.0)
+  paidAmount    Float     @default(0.0)
+  status        String    @default("PENDING") // "PENDING" | "PARTIALLY_PAID" | "PAID" | "CANCELED"
+  dueDate       DateTime
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customer      Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  workOrder     WorkOrder? @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+  quote         Quote?     @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  payments      Payment[]
+
+  @@index([customerId])
+  @@index([workOrderId])
+  @@index([quoteId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  invoiceId     String
+  amount        Float
+  paymentMethod String   // "PIX" | "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_SLIP"
+  paidAt        DateTime @default(now())
+  receivedBy    String   @default("SYSTEM")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([paymentMethod])
+  @@index([paidAt])
+  @@map("payments")
 }
 
 
