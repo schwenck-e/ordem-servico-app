@@ -244,6 +244,7 @@ export const createWorkOrderSwaggerSchema = {
   tags: ['WorkOrders'],
   summary: 'Criar nova Ordem de Serviço',
   description: 'Cadastra uma nova Ordem de Serviço com itens (serviços e peças), geração atômica de protocolo sequencial e log inicial.',
+  security: [{ bearerAuth: [] }],
   body: {
     type: 'object' as const,
     required: ['customerId', 'equipment', 'reportedDefect', 'items'],
@@ -280,6 +281,7 @@ export const listWorkOrdersSwaggerSchema = {
   tags: ['WorkOrders'],
   summary: 'Listar Ordens de Serviço com filtros e paginação',
   description: 'Retorna a lista paginada de Ordens de Serviço com suporte a busca textual e filtros operacionais por status, prioridade, cliente, técnico e datas.',
+  security: [{ bearerAuth: [] }],
   querystring: {
     type: 'object' as const,
     properties: {
@@ -300,6 +302,7 @@ export const getWorkOrderSwaggerSchema = {
   tags: ['WorkOrders'],
   summary: 'Buscar Ordem de Serviço por ID',
   description: 'Retorna os detalhes completos de uma Ordem de Serviço incluindo cliente, técnico, itens e histórico cronológico de logs.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],
@@ -313,6 +316,7 @@ export const updateWorkOrderSwaggerSchema = {
   tags: ['WorkOrders'],
   summary: 'Atualizar Ordem de Serviço e Itens',
   description: 'Atualiza dados cadastrais e permite a substituição atômica de itens com recálculo automático de subtotais e valor total.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],
@@ -354,6 +358,7 @@ export const updateWorkOrderStatusSwaggerSchema = {
   tags: ['WorkOrders'],
   summary: 'Atualizar status da Ordem de Serviço com validação de fluxo e auditoria',
   description: 'Altera o status da Ordem de Serviço respeitando as transições permitidas da máquina de estados, regras de negócio associadas e registro atômico no histórico de auditoria.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],
@@ -381,6 +386,7 @@ export const getWorkOrderTimelineSwaggerSchema = {
   tags: ['WorkOrders'],
   summary: 'Consultar linha do tempo / histórico de auditoria da Ordem de Serviço',
   description: 'Retorna o histórico cronológico completo de mudanças de status e anotações da Ordem de Serviço.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],

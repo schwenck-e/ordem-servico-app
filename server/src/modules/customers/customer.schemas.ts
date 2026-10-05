@@ -143,6 +143,7 @@ export const createCustomerSwaggerSchema = {
   tags: ['Customers'],
   summary: 'Cadastrar novo cliente',
   description: 'Cria um novo registro de cliente com validação de CPF/CNPJ, e-mail e telefone.',
+  security: [{ bearerAuth: [] }],
   body: {
     type: 'object' as const,
     required: ['name', 'document', 'email', 'phone', 'address'],
@@ -160,6 +161,7 @@ export const listCustomersSwaggerSchema = {
   tags: ['Customers'],
   summary: 'Listar clientes com paginação e busca',
   description: 'Retorna lista paginada de clientes com filtro textual opcional por nome, documento ou e-mail.',
+  security: [{ bearerAuth: [] }],
   querystring: {
     type: 'object' as const,
     properties: {
@@ -174,6 +176,7 @@ export const getCustomerSwaggerSchema = {
   tags: ['Customers'],
   summary: 'Buscar cliente por ID',
   description: 'Retorna os dados detalhados de um cliente pelo UUID, incluindo contagem de ordens de serviço.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     properties: {
@@ -187,6 +190,7 @@ export const updateCustomerSwaggerSchema = {
   tags: ['Customers'],
   summary: 'Atualizar dados de cliente',
   description: 'Atualiza parcial ou totalmente os dados cadastrais de um cliente existente.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     properties: {
@@ -210,6 +214,7 @@ export const deleteCustomerSwaggerSchema = {
   tags: ['Customers'],
   summary: 'Excluir cliente',
   description: 'Remove um cliente caso não possua ordens de serviço vinculadas.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     properties: {

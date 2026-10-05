@@ -99,8 +99,14 @@ afterAll(async () => {
 
 beforeEach(async () => {
   // Limpeza de tabelas no banco de dados de teste
+  await app.prisma.financialTransaction.deleteMany();
+  await app.prisma.payment.deleteMany();
+  await app.prisma.invoice.deleteMany();
+  await app.prisma.quoteItem.deleteMany();
+  await app.prisma.quote.deleteMany();
   await app.prisma.workOrderAttachment.deleteMany();
   await app.prisma.workOrderLog.deleteMany();
+  await app.prisma.stockMovement.deleteMany();
   await app.prisma.workOrderItem.deleteMany();
   await app.prisma.workOrder.deleteMany();
   await app.prisma.technician.deleteMany();

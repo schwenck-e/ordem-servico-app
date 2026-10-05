@@ -197,6 +197,7 @@ export const createQuoteSwaggerSchema = {
   tags: ['Quotes'],
   summary: 'Criar novo Orçamento',
   description: 'Cadastra uma nova cotação de serviços e peças em status inicial DRAFT com geração automática de protocolo ORC-YYYY-XXXX.',
+  security: [{ bearerAuth: [] }],
   body: {
     type: 'object' as const,
     required: ['customerId', 'equipment', 'reportedDefect', 'items'],
@@ -233,6 +234,7 @@ export const listQuotesSwaggerSchema = {
   tags: ['Quotes'],
   summary: 'Listar Orçamentos com filtros e paginação',
   description: 'Retorna a lista paginada de orçamentos com suporte a busca textual por cliente, protocolo ou equipamento, e filtros por status ou cliente.',
+  security: [{ bearerAuth: [] }],
   querystring: {
     type: 'object' as const,
     properties: {
@@ -251,6 +253,7 @@ export const getQuoteSwaggerSchema = {
   tags: ['Quotes'],
   summary: 'Buscar Orçamento por ID',
   description: 'Retorna os detalhes completos de um orçamento com itens, dados do cliente, técnico e eventual Ordem de Serviço convertida.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],
@@ -264,6 +267,7 @@ export const updateQuoteSwaggerSchema = {
   tags: ['Quotes'],
   summary: 'Atualizar Orçamento em Rascunho (DRAFT)',
   description: 'Permite editar dados e itens de um orçamento enquanto estiver em status DRAFT. Orçamentos enviados ou finalizados não podem ser alterados.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],
@@ -306,6 +310,7 @@ export const updateQuoteStatusSwaggerSchema = {
   tags: ['Quotes'],
   summary: 'Atualizar Status do Orçamento',
   description: 'Altera o status do orçamento seguindo a máquina de estados (ex.: DRAFT -> SENT, SENT -> APPROVED / REJECTED / EXPIRED).',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],
@@ -327,6 +332,7 @@ export const convertToWorkOrderSwaggerSchema = {
   tags: ['Quotes'],
   summary: 'Converter Orçamento em Ordem de Serviço',
   description: 'Operação transacional que cria uma nova Ordem de Serviço a partir do orçamento, deduz o estoque de peças cadastradas, registra movimentações OUT, vincula a OS gerada ao orçamento e marca o orçamento como APPROVED.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     required: ['id'],

@@ -78,6 +78,7 @@ export const createTechnicianSwaggerSchema = {
   summary: 'Cadastrar novo técnico',
   description:
     'Cria um novo registro de técnico com validação de e-mail, telefone e especialidade. Retorna 409 se o e-mail já estiver em uso.',
+  security: [{ bearerAuth: [] }],
   body: {
     type: 'object' as const,
     required: ['name', 'email', 'phone', 'specialty'],
@@ -96,6 +97,7 @@ export const listTechniciansSwaggerSchema = {
   summary: 'Listar técnicos com paginação, busca e filtros',
   description:
     'Retorna lista paginada de técnicos com filtro textual opcional (nome, e-mail, especialidade, telefone) e filtros por status de atividade e especialidade.',
+  security: [{ bearerAuth: [] }],
   querystring: {
     type: 'object' as const,
     properties: {
@@ -113,6 +115,7 @@ export const getTechnicianSwaggerSchema = {
   summary: 'Buscar técnico por ID',
   description:
     'Retorna os dados detalhados de um técnico pelo UUID, incluindo contagem de ordens de serviço associadas.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     properties: {
@@ -127,6 +130,7 @@ export const updateTechnicianSwaggerSchema = {
   summary: 'Atualizar dados de técnico',
   description:
     'Atualiza parcial ou totalmente os dados cadastrais de um técnico existente. Retorna 409 se o novo e-mail já pertencer a outro técnico.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     properties: {
@@ -151,6 +155,7 @@ export const deleteTechnicianSwaggerSchema = {
   summary: 'Excluir técnico',
   description:
     'Remove um técnico caso não possua ordens de serviço ativas (OPEN, IN_PROGRESS, WAITING_PARTS, WAITING_APPROVAL) vinculadas.',
+  security: [{ bearerAuth: [] }],
   params: {
     type: 'object' as const,
     properties: {
