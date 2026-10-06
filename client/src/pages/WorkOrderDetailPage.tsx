@@ -12,11 +12,13 @@ import { WorkOrderTimeline } from '@/components/work-orders/detail/WorkOrderTime
 import { AttachmentGallery } from '@/components/attachments/AttachmentGallery';
 import { WorkOrderPrintReceipt } from '@/components/work-orders/detail/WorkOrderPrintReceipt';
 import { WorkOrderStatusModal } from '@/components/work-orders/WorkOrderStatusModal';
+import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 
 export const WorkOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: order, isLoading, isError, error } = useWorkOrder(id);
+  const { data: order, isLoading, isError, error, refetch } = useWorkOrder(id);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   const handlePrint = () => {
     window.print();
@@ -84,6 +86,7 @@ export const WorkOrderDetailPage: React.FC = () => {
         <WorkOrderHeader
           order={order}
           onOpenStatusModal={() => setIsStatusModalOpen(true)}
+          onOpenInvoiceModal={() => setIsInvoiceModalOpen(true)}
           onPrint={handlePrint}
         />
 
@@ -119,6 +122,17 @@ export const WorkOrderDetailPage: React.FC = () => {
           order={order}
           isOpen={isStatusModalOpen}
           onClose={() => setIsStatusModalOpen(false)}
+        />
+
+        {/* Modal de Faturamento Comercial */}
+        <CreateInvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          workOrder={order}
+          onSuccess={() => {
+            setIsInvoiceModalOpen(false);
+            refetch();
+          }}
         />
       </div>
 

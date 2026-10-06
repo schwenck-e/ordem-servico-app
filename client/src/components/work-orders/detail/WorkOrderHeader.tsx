@@ -18,12 +18,14 @@ import type { WorkOrder } from '@/types';
 interface WorkOrderHeaderProps {
   order: WorkOrder;
   onOpenStatusModal: () => void;
+  onOpenInvoiceModal?: () => void;
   onPrint: () => void;
 }
 
 export const WorkOrderHeader: React.FC<WorkOrderHeaderProps> = ({
   order,
   onOpenStatusModal,
+  onOpenInvoiceModal,
   onPrint,
 }) => {
   const navigate = useNavigate();
@@ -101,14 +103,26 @@ export const WorkOrderHeader: React.FC<WorkOrderHeaderProps> = ({
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
           {order.status === 'COMPLETED' && (
-            <Link
-              to={`/invoices?search=${order.orderNumber}`}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors shadow-sm"
-              title="Visualizar ou emitir fatura desta ordem de serviço"
-            >
-              <Receipt className="w-4 h-4 text-emerald-600" />
-              <span>Ver Fatura</span>
-            </Link>
+            order.invoices && order.invoices.length > 0 ? (
+              <Link
+                to={`/invoices/${order.invoices[0].id}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors shadow-sm"
+                title="Visualizar fatura comercial gerada"
+              >
+                <Receipt className="w-4 h-4 text-emerald-600" />
+                <span>Ver Fatura ({order.invoices[0].invoiceNumber})</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenInvoiceModal}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                title="Emitir fatura comercial para esta ordem de serviço"
+              >
+                <Receipt className="w-4 h-4 text-white" />
+                <span>Faturar Ordem</span>
+              </button>
+            )
           )}
 
           <button

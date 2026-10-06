@@ -257,6 +257,16 @@ export async function getQuoteById(prisma: PrismaClient, id: string) {
           status: true,
         },
       },
+      invoices: {
+        select: {
+          id: true,
+          invoiceNumber: true,
+          status: true,
+          netAmount: true,
+          paidAmount: true,
+          dueDate: true,
+        },
+      },
     },
   });
 

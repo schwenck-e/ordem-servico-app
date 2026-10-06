@@ -225,6 +225,14 @@ export interface WorkOrder extends Omit<WorkOrderSummary, 'customer' | 'technici
   items: WorkOrderItem[];
   logs: WorkOrderLog[];
   attachments?: WorkOrderAttachment[];
+  invoices?: Array<{
+    id: string;
+    invoiceNumber: string;
+    status: string;
+    netAmount: number;
+    paidAmount: number;
+    dueDate: string;
+  }>;
 }
 
 export interface WorkOrderFilterParams {
@@ -551,6 +559,14 @@ export interface Quote extends Omit<QuoteSummary, '_count'> {
     orderNumber: string;
     status: WorkOrderStatus;
   } | null;
+  invoices?: Array<{
+    id: string;
+    invoiceNumber: string;
+    status: string;
+    netAmount: number;
+    paidAmount: number;
+    dueDate: string;
+  }>;
 }
 
 export interface CreateQuoteItemInput {
