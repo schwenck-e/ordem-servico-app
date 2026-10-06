@@ -4,6 +4,25 @@
 
 @layer base {
   body {
-    @apply font-sans bg-slate-50 text-slate-900 min-h-screen;
+    @apply font-sans bg-slate-50 text-slate-900 min-h-screen antialiased selection:bg-brand-500 selection:text-white;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+}
+
+@layer components {
+  /* Surface card standard */
+  .card-surface {
+    @apply bg-white rounded-xl border border-slate-200/80 shadow-xs hover:shadow-card transition-all;
   }
 }

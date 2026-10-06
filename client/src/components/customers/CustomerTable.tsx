@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Edit2, Trash2, Mail, Phone, MapPin, AlertTriangle, Loader2 } from 'lucide-react';
 import { maskDocument, maskPhone } from '@/lib/masks';
 import { Badge } from '@/components/common/Badge';
@@ -90,9 +91,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers, onEdit 
 
                   {/* Contagem de OS */}
                   <td className="px-6 py-4 text-center">
-                    <Badge variant={osCount > 0 ? 'info' : 'neutral'}>
-                      {osCount} {osCount === 1 ? 'ordem' : 'ordens'}
-                    </Badge>
+                    {osCount > 0 ? (
+                      <Link
+                        to={`/work-orders?search=${encodeURIComponent(customer.name)}`}
+                        className="inline-flex transition-transform hover:scale-105"
+                        title={`Visualizar as ${osCount} ordens de serviço deste cliente`}
+                      >
+                        <Badge variant="info" className="hover:bg-sky-100 hover:border-sky-300 transition-colors cursor-pointer">
+                          {osCount} {osCount === 1 ? 'ordem' : 'ordens'}
+                        </Badge>
+                      </Link>
+                    ) : (
+                      <Badge variant="neutral">
+                        0 ordens
+                      </Badge>
+                    )}
                   </td>
 
                   {/* Ações */}

@@ -26,6 +26,7 @@ import { QuoteStatusBadge } from '@/components/quotes/QuoteStatusBadge';
 import { QuotePrintReceipt } from '@/components/quotes/QuotePrintReceipt';
 import { ConvertQuoteModal } from '@/components/quotes/ConvertQuoteModal';
 import { QuoteStatusModal } from '@/components/quotes/QuoteStatusModal';
+import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { maskDocument, maskPhone } from '@/lib/masks';
 
@@ -33,10 +34,11 @@ export const QuoteDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: quote, isLoading, isError, error } = useQuote(id);
+  const { data: quote, isLoading, isError, error, refetch } = useQuote(id);
 
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -194,16 +196,28 @@ export const QuoteDetailPage: React.FC = () => {
               </button>
             )}
 
-            {/* Atalho para Faturas */}
-            {(quote.status === 'APPROVED' || isConverted) && (
-              <Link
-                to={`/invoices?search=${quote.quoteNumber}`}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors shadow-sm"
-                title="Consultar fatura vinculada"
-              >
-                <Receipt className="w-4 h-4 text-emerald-600" />
-                <span>Ver Fatura</span>
-              </Link>
+            {/* Faturar Orçamento Aprovado */}
+            {quote.status === 'APPROVED' && !isConverted && (
+              quote.invoices && quote.invoices.length > 0 ? (
+                <Link
+                  to={`/invoices/${quote.invoices[0].id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors shadow-sm"
+                  title="Visualizar fatura comercial gerada"
+                >
+                  <Receipt className="w-4 h-4 text-emerald-600" />
+                  <span>Ver Fatura ({quote.invoices[0].invoiceNumber})</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsInvoiceModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                  title="Emitir fatura comercial para este orçamento aprovado"
+                >
+                  <Receipt className="w-4 h-4 text-white" />
+                  <span>Faturar Orçamento</span>
+                </button>
+              )
             )}
           </div>
         </div>
@@ -427,6 +441,16 @@ export const QuoteDetailPage: React.FC = () => {
         isOpen={isStatusModalOpen}
         onClose={() => setIsStatusModalOpen(false)}
         quote={quote}
+      />
+
+      <CreateInvoiceModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        quote={quote}
+        onSuccess={() => {
+          setIsInvoiceModalOpen(false);
+          refetch();
+        }}
       />
     </div>
   );

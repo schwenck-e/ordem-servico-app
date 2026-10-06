@@ -1,0 +1,128 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: "file:./dev.db"
+  JWT_SECRET: "supersecret-ordem-servico-jwt-key-2026-development-only"
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Job 1: Quality Gate & Typecheck
+  # ----------------------------------------------------------------------------
+  quality-gate:
+    name: Code Quality & Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node & Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Server Dependencies
+        run: bun install --frozen-lockfile
+        working-directory: server
+
+      - name: Install Client Dependencies
+        run: bun install --frozen-lockfile
+        working-directory: client
+
+      - name: Generate Prisma Client
+        run: bun run prisma:generate
+        working-directory: server
+
+      - name: Server Typecheck
+        run: bun run typecheck
+        working-directory: server
+
+  # ----------------------------------------------------------------------------
+  # Job 2: Automated Tests
+  # ----------------------------------------------------------------------------
+  test-suite:
+    name: Automated Tests (Vitest)
+    runs-on: ubuntu-latest
+    needs: [quality-gate]
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node & Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Server Dependencies
+        run: bun install --frozen-lockfile
+        working-directory: server
+
+      - name: Generate Prisma Client & Setup Test Database
+        run: |
+          bun run prisma:generate
+          bunx prisma db push --skip-generate
+        working-directory: server
+
+      - name: Run Backend Tests
+        run: bun run test
+        working-directory: server
+
+  # ----------------------------------------------------------------------------
+  # Job 3: Client Production Build
+  # ----------------------------------------------------------------------------
+  build-client:
+    name: Client Production Build (Vite)
+    runs-on: ubuntu-latest
+    needs: [quality-gate]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node & Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Client Dependencies
+        run: bun install --frozen-lockfile
+        working-directory: client
+
+      - name: Build Frontend
+        run: bun run build
+        working-directory: client
+
+  # ----------------------------------------------------------------------------
+  # Job 4: Security & Dependency Audit
+  # ----------------------------------------------------------------------------
+  security-audit:
+    name: Security & Vulnerability Scan
+    runs-on: ubuntu-latest
+    needs: [quality-gate]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Audit Server Dependencies
+        run: bun audit || true
+        working-directory: server
+
+      - name: Audit Client Dependencies
+        run: bun audit || true
+        working-directory: client

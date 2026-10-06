@@ -4,6 +4,8 @@ import { FileText, Plus, AlertCircle, RefreshCw } from 'lucide-react';
 import { QuoteFilters, type QuoteFiltersState } from '@/components/quotes/QuoteFilters';
 import { QuoteTable } from '@/components/quotes/QuoteTable';
 import { ConvertQuoteModal } from '@/components/quotes/ConvertQuoteModal';
+import { QuoteStatusModal } from '@/components/quotes/QuoteStatusModal';
+import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { Pagination } from '@/components/common/Pagination';
 import { TableSkeleton } from '@/components/common/TableSkeleton';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -29,8 +31,10 @@ export const QuotesPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  // Modal de conversão rápida
+  // Modais de ação rápida
   const [quoteToConvert, setQuoteToConvert] = useState<QuoteSummary | null>(null);
+  const [quoteToChangeStatus, setQuoteToChangeStatus] = useState<QuoteSummary | null>(null);
+  const [quoteToInvoice, setQuoteToInvoice] = useState<QuoteSummary | null>(null);
 
   const hasActiveFilters = Boolean(
     filters.search.trim() ||
@@ -146,6 +150,8 @@ export const QuotesPage: React.FC = () => {
           <QuoteTable
             quotes={quotes}
             onConvert={(quote) => setQuoteToConvert(quote)}
+            onStatusChange={(quote) => setQuoteToChangeStatus(quote)}
+            onInvoice={(quote) => setQuoteToInvoice(quote)}
           />
 
           {/* Paginação */}
@@ -167,6 +173,24 @@ export const QuotesPage: React.FC = () => {
         isOpen={Boolean(quoteToConvert)}
         onClose={() => setQuoteToConvert(null)}
         quote={quoteToConvert}
+      />
+
+      {/* Modal de Transição de Status do Orçamento */}
+      <QuoteStatusModal
+        isOpen={Boolean(quoteToChangeStatus)}
+        onClose={() => setQuoteToChangeStatus(null)}
+        quote={quoteToChangeStatus}
+      />
+
+      {/* Modal de Faturamento do Orçamento */}
+      <CreateInvoiceModal
+        isOpen={Boolean(quoteToInvoice)}
+        onClose={() => setQuoteToInvoice(null)}
+        quote={quoteToInvoice}
+        onSuccess={() => {
+          setQuoteToInvoice(null);
+          refetch();
+        }}
       />
     </div>
   );

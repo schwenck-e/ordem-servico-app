@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Edit2, Wrench, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Eye, Edit2, Wrench, Calendar, ArrowRight, CheckCircle2, ArrowRightLeft, Receipt } from 'lucide-react';
 import { QuoteStatusBadge } from '@/components/quotes/QuoteStatusBadge';
 import { maskPhone } from '@/lib/masks';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -9,9 +9,16 @@ import type { QuoteSummary } from '@/types';
 interface QuoteTableProps {
   quotes: QuoteSummary[];
   onConvert?: (quote: QuoteSummary) => void;
+  onStatusChange?: (quote: QuoteSummary) => void;
+  onInvoice?: (quote: QuoteSummary) => void;
 }
 
-export const QuoteTable: React.FC<QuoteTableProps> = ({ quotes, onConvert }) => {
+export const QuoteTable: React.FC<QuoteTableProps> = ({
+  quotes,
+  onConvert,
+  onStatusChange,
+  onInvoice,
+}) => {
   return (
     <div className="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-sm">
       <table className="w-full text-left text-sm text-slate-600">
@@ -125,13 +132,39 @@ export const QuoteTable: React.FC<QuoteTableProps> = ({ quotes, onConvert }) => 
                 {/* Ações */}
                 <td className="px-5 py-4 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1.5">
+                    {/* Ação de alterar status para DRAFT ou SENT */}
+                    {(isDraft || quote.status === 'SENT') && onStatusChange && (
+                      <button
+                        type="button"
+                        onClick={() => onStatusChange(quote)}
+                        title="Alterar status do orçamento"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border text-brand-600 hover:text-brand-700 border-brand-200 hover:border-brand-300 bg-brand-50/50 hover:bg-brand-50 transition-colors"
+                      >
+                        <ArrowRightLeft className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Status</span>
+                      </button>
+                    )}
+
+                    {/* Ação de faturar se APROVADO e sem OS */}
+                    {quote.status === 'APPROVED' && !isConverted && onInvoice && (
+                      <button
+                        type="button"
+                        onClick={() => onInvoice(quote)}
+                        title="Faturar este orçamento aprovado"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors shadow-xs"
+                      >
+                        <Receipt className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="hidden sm:inline">Faturar</span>
+                      </button>
+                    )}
+
                     {/* Ação de converter em OS se aplicável */}
                     {canConvert && onConvert && (
                       <button
                         type="button"
                         onClick={() => onConvert(quote)}
                         title="Converter em Ordem de Serviço"
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors shadow-sm"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors shadow-xs"
                       >
                         <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
                         <span className="hidden sm:inline">Gerar OS</span>
