@@ -31,6 +31,11 @@ export async function listCustomers(
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: { workOrders: true },
+        },
+      },
     }),
     prisma.customer.count({ where }),
   ]);

@@ -158,6 +158,8 @@ describe('GET /customers', () => {
     const body = res.json();
     expect(Array.isArray(body.data)).toBe(true);
     expect(body.data.length).toBe(2);
+    expect(body.data[0]._count).toBeDefined();
+    expect(typeof body.data[0]._count.workOrders).toBe('number');
     expect(body.meta).toBeDefined();
     expect(body.meta.page).toBe(1);
     expect(body.meta.limit).toBe(10);
