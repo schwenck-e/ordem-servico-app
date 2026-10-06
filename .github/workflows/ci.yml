@@ -36,6 +36,10 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: client
 
+      - name: Generate Prisma Client
+        run: bun run prisma:generate
+        working-directory: server
+
       - name: Server Typecheck
         run: bun run typecheck
         working-directory: server
@@ -61,8 +65,8 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: server
 
-      - name: Run Prisma Generate
-        run: bunx prisma generate
+      - name: Generate Prisma Client
+        run: bun run prisma:generate
         working-directory: server
 
       - name: Run Backend Tests
