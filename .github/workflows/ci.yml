@@ -65,12 +65,14 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: server
 
-      - name: Generate Prisma Client
-        run: bun run prisma:generate
+      - name: Generate Prisma Client & Setup Test Database
+        run: |
+          bun run prisma:generate
+          bunx prisma db push --skip-generate
         working-directory: server
 
       - name: Run Backend Tests
-        run: bun test
+        run: bun run test
         working-directory: server
 
   # ----------------------------------------------------------------------------
