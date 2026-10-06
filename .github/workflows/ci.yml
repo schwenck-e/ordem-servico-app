@@ -11,6 +11,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DATABASE_URL: "file:./dev.db"
+  JWT_SECRET: "supersecret-ordem-servico-jwt-key-2026-development-only"
+
 jobs:
   # ----------------------------------------------------------------------------
   # Job 1: Quality Gate & Typecheck
