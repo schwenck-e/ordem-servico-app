@@ -317,6 +317,16 @@ export async function getWorkOrderById(prisma: PrismaClient, id: string) {
       attachments: {
         orderBy: { createdAt: 'desc' },
       },
+      invoices: {
+        select: {
+          id: true,
+          invoiceNumber: true,
+          status: true,
+          netAmount: true,
+          paidAmount: true,
+          dueDate: true,
+        },
+      },
     },
   });
 
