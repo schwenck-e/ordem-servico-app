@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Receipt, AlertCircle, RefreshCw } from 'lucide-react';
+import { Receipt, AlertCircle, RefreshCw, Plus } from 'lucide-react';
 import { InvoiceFilters, type InvoiceFiltersState } from '@/components/invoices/InvoiceFilters';
 import { InvoiceTable } from '@/components/invoices/InvoiceTable';
 import { PaymentModal } from '@/components/financial/PaymentModal';
+import { SelectBillableModal } from '@/components/invoices/SelectBillableModal';
+import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { Pagination } from '@/components/common/Pagination';
 import { TableSkeleton } from '@/components/common/TableSkeleton';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { InvoiceSummary } from '@/types';
+import type { InvoiceSummary, WorkOrderSummary, QuoteSummary } from '@/types';
 
 const INITIAL_FILTERS: InvoiceFiltersState = {
   search: '',
@@ -28,6 +30,11 @@ export const InvoicesPage: React.FC = () => {
 
   // Modal de Quitação
   const [paymentInvoice, setPaymentInvoice] = useState<InvoiceSummary | null>(null);
+
+  // Modais de Criação de Fatura
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  const [selectedBillableWO, setSelectedBillableWO] = useState<WorkOrderSummary | null>(null);
+  const [selectedBillableQuote, setSelectedBillableQuote] = useState<QuoteSummary | null>(null);
 
   const hasActiveFilters = Boolean(
     filters.search.trim() ||
@@ -73,6 +80,15 @@ export const InvoicesPage: React.FC = () => {
             </p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsSelectModalOpen(true)}
+          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Nova Fatura</span>
+        </button>
       </div>
 
       {/* Painel de Filtros */}
@@ -147,6 +163,36 @@ export const InvoicesPage: React.FC = () => {
           onSuccess={() => refetch()}
         />
       )}
+
+      {/* Modal de Seleção de Documento para Faturamento */}
+      <SelectBillableModal
+        isOpen={isSelectModalOpen}
+        onClose={() => setIsSelectModalOpen(false)}
+        onSelectWorkOrder={(order) => {
+          setSelectedBillableWO(order);
+          setIsSelectModalOpen(false);
+        }}
+        onSelectQuote={(quote) => {
+          setSelectedBillableQuote(quote);
+          setIsSelectModalOpen(false);
+        }}
+      />
+
+      {/* Modal de Criação de Fatura a partir de OS ou Orçamento */}
+      <CreateInvoiceModal
+        isOpen={Boolean(selectedBillableWO || selectedBillableQuote)}
+        onClose={() => {
+          setSelectedBillableWO(null);
+          setSelectedBillableQuote(null);
+        }}
+        workOrder={selectedBillableWO}
+        quote={selectedBillableQuote}
+        onSuccess={() => {
+          setSelectedBillableWO(null);
+          setSelectedBillableQuote(null);
+          refetch();
+        }}
+      />
     </div>
   );
 };
