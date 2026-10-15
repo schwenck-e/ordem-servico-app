@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { validateCnpj } from '../customers/customer.schemas';
+import { validateCnpj } from '../../common/validators/documents';
 
 export const updateCompanySchema = z
   .object({

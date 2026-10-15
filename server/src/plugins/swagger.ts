@@ -7,8 +7,8 @@ export default fp(async (app) => {
     openapi: {
       info: {
         title: 'API Ordem de Serviço — Sistema de Gestão Fullstack',
-        description: 'Documentação interativa da API REST para gestão operacional, técnica, comercial e financeira de Ordens de Serviço (Release v1.1).',
-        version: '1.1.0'
+        description: 'Documentação interativa da API REST para gestão operacional, técnica, comercial e financeira de Ordens de Serviço (Release v1.4).',
+        version: '1.4.0'
       },
       servers: [
         {
