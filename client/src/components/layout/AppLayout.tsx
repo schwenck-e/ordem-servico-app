@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { PageLoader } from '@/components/common/PageLoader';
 
 export const AppLayout: React.FC = () => {
   return (
@@ -10,7 +11,9 @@ export const AppLayout: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 print:block">
         <Header />
         <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto print:p-0 print:max-w-none print:m-0 print:bg-white">
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
